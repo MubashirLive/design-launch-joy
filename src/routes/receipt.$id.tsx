@@ -54,7 +54,7 @@ function ReceiptPage() {
     supabase.from("enrollments").select("*").eq("id", id).maybeSingle().then(({ data }) => {
       setData(data as unknown as Enrollment | null);
       if (data) {
-        supabase.from("admins").select("admin_id,full_name").eq("user_id", (data as Enrollment).enrolled_by).maybeSingle()
+        supabase.from("admins").select("admin_id,full_name").eq("user_id", (data as unknown as Enrollment).enrolled_by).maybeSingle()
           .then(({ data: a }) => {
             if (a) setEnrolledByLabel(`${a.full_name} (${a.admin_id})`);
             else setEnrolledByLabel("Super Admin");
