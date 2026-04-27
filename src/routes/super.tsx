@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
-import { FilePlus2, Users } from "lucide-react";
+import { BarChart3, FilePlus2, Users } from "lucide-react";
 
 export const Route = createFileRoute("/super")({
   component: SuperHome,
@@ -21,13 +21,11 @@ function SuperHome() {
 
   return (
     <AppShell title="Super Admin Dashboard">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <DashCard to="/analytics" icon={<BarChart3 className="h-6 w-6" />} title="Analytics" desc="Revenue, trends, leaderboard" />
         <DashCard to="/admins" icon={<Users className="h-6 w-6" />} title="Manage Admins" desc="Create, edit, reset, disable" />
         <DashCard to="/enroll" icon={<FilePlus2 className="h-6 w-6" />} title="New Enrollment" desc="Fill a new student form" />
       </div>
-      <p className="mt-6 text-sm text-muted-foreground">
-        Analytics & CSV export coming next. View all enrollments via the Manage area for now.
-      </p>
     </AppShell>
   );
 }
