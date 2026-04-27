@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuperRouteImport } from './routes/super'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as EnrollRouteImport } from './routes/enroll'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AdminsRouteImport } from './routes/admins'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReceiptIdRouteImport } from './routes/receipt.$id'
 import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
 import { Route as ApiAdminResetPasswordRouteImport } from './routes/api/admin/reset-password'
 import { Route as ApiAdminCreateRouteImport } from './routes/api/admin/create'
@@ -26,6 +28,11 @@ const SuperRoute = SuperRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnrollRoute = EnrollRouteImport.update({
+  id: '/enroll',
+  path: '/enroll',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -41,6 +48,11 @@ const AdminsRoute = AdminsRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReceiptIdRoute = ReceiptIdRouteImport.update({
+  id: '/receipt/$id',
+  path: '/receipt/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicBootstrapRoute = ApiPublicBootstrapRouteImport.update({
@@ -63,8 +75,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admins': typeof AdminsRoute
   '/dashboard': typeof DashboardRoute
+  '/enroll': typeof EnrollRoute
   '/login': typeof LoginRoute
   '/super': typeof SuperRoute
+  '/receipt/$id': typeof ReceiptIdRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
@@ -73,8 +87,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admins': typeof AdminsRoute
   '/dashboard': typeof DashboardRoute
+  '/enroll': typeof EnrollRoute
   '/login': typeof LoginRoute
   '/super': typeof SuperRoute
+  '/receipt/$id': typeof ReceiptIdRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
@@ -84,8 +100,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admins': typeof AdminsRoute
   '/dashboard': typeof DashboardRoute
+  '/enroll': typeof EnrollRoute
   '/login': typeof LoginRoute
   '/super': typeof SuperRoute
+  '/receipt/$id': typeof ReceiptIdRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
@@ -96,8 +114,10 @@ export interface FileRouteTypes {
     | '/'
     | '/admins'
     | '/dashboard'
+    | '/enroll'
     | '/login'
     | '/super'
+    | '/receipt/$id'
     | '/api/admin/create'
     | '/api/admin/reset-password'
     | '/api/public/bootstrap'
@@ -106,8 +126,10 @@ export interface FileRouteTypes {
     | '/'
     | '/admins'
     | '/dashboard'
+    | '/enroll'
     | '/login'
     | '/super'
+    | '/receipt/$id'
     | '/api/admin/create'
     | '/api/admin/reset-password'
     | '/api/public/bootstrap'
@@ -116,8 +138,10 @@ export interface FileRouteTypes {
     | '/'
     | '/admins'
     | '/dashboard'
+    | '/enroll'
     | '/login'
     | '/super'
+    | '/receipt/$id'
     | '/api/admin/create'
     | '/api/admin/reset-password'
     | '/api/public/bootstrap'
@@ -127,8 +151,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminsRoute: typeof AdminsRoute
   DashboardRoute: typeof DashboardRoute
+  EnrollRoute: typeof EnrollRoute
   LoginRoute: typeof LoginRoute
   SuperRoute: typeof SuperRoute
+  ReceiptIdRoute: typeof ReceiptIdRoute
   ApiAdminCreateRoute: typeof ApiAdminCreateRoute
   ApiAdminResetPasswordRoute: typeof ApiAdminResetPasswordRoute
   ApiPublicBootstrapRoute: typeof ApiPublicBootstrapRoute
@@ -150,6 +176,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/enroll': {
+      id: '/enroll'
+      path: '/enroll'
+      fullPath: '/enroll'
+      preLoaderRoute: typeof EnrollRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -169,6 +202,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/receipt/$id': {
+      id: '/receipt/$id'
+      path: '/receipt/$id'
+      fullPath: '/receipt/$id'
+      preLoaderRoute: typeof ReceiptIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/bootstrap': {
@@ -199,8 +239,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminsRoute: AdminsRoute,
   DashboardRoute: DashboardRoute,
+  EnrollRoute: EnrollRoute,
   LoginRoute: LoginRoute,
   SuperRoute: SuperRoute,
+  ReceiptIdRoute: ReceiptIdRoute,
   ApiAdminCreateRoute: ApiAdminCreateRoute,
   ApiAdminResetPasswordRoute: ApiAdminResetPasswordRoute,
   ApiPublicBootstrapRoute: ApiPublicBootstrapRoute,
@@ -208,3 +250,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
