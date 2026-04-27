@@ -91,7 +91,7 @@ function AdminHome() {
             <thead className="bg-muted text-muted-foreground">
               <tr>
                 <Th>Receipt</Th><Th>Reg ID</Th><Th>Student</Th><Th>Shift</Th>
-                <Th>Amount</Th><Th>Mode</Th><Th>Date</Th><Th></Th>
+                <Th>Amount</Th><Th>Mode</Th><Th>Date</Th><Th>{" "}</Th>
               </tr>
             </thead>
             <tbody>
