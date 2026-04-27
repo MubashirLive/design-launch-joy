@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiAdminResetPasswordRouteImport } from './routes/api/admin/reset-password'
 import { Route as ApiAdminCreateRouteImport } from './routes/api/admin/create'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminResetPasswordRoute = ApiAdminResetPasswordRouteImport.update({
+  id: '/api/admin/reset-password',
+  path: '/api/admin/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminCreateRoute = ApiAdminCreateRouteImport.update({
@@ -26,27 +32,31 @@ const ApiAdminCreateRoute = ApiAdminCreateRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
+  '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
+  '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
+  '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/admin/create'
+  fullPaths: '/' | '/api/admin/create' | '/api/admin/reset-password'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/admin/create'
-  id: '__root__' | '/' | '/api/admin/create'
+  to: '/' | '/api/admin/create' | '/api/admin/reset-password'
+  id: '__root__' | '/' | '/api/admin/create' | '/api/admin/reset-password'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiAdminCreateRoute: typeof ApiAdminCreateRoute
+  ApiAdminResetPasswordRoute: typeof ApiAdminResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/reset-password': {
+      id: '/api/admin/reset-password'
+      path: '/api/admin/reset-password'
+      fullPath: '/api/admin/reset-password'
+      preLoaderRoute: typeof ApiAdminResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/create': {
@@ -71,6 +88,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiAdminCreateRoute: ApiAdminCreateRoute,
+  ApiAdminResetPasswordRoute: ApiAdminResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
