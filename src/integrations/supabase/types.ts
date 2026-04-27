@@ -14,16 +14,220 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admins: {
+        Row: {
+          admin_id: string
+          created_at: string
+          created_by: string | null
+          email: string
+          forms_filled_count: number
+          full_name: string
+          id: string
+          is_active: boolean
+          user_id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          created_by?: string | null
+          email: string
+          forms_filled_count?: number
+          full_name: string
+          id?: string
+          is_active?: boolean
+          user_id: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          forms_filled_count?: number
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      counters: {
+        Row: {
+          name: string
+          value: number
+        }
+        Insert: {
+          name: string
+          value?: number
+        }
+        Update: {
+          name?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      enrollments: {
+        Row: {
+          activities: Json
+          address: string
+          age: number
+          allergies_medications: string | null
+          city: string
+          class: string
+          combo_applied: boolean
+          combo_discount: number
+          created_at: string
+          date_of_birth: string
+          email: string
+          emergency_contact: string
+          enrolled_at: string
+          enrolled_by: string
+          father_contact: string
+          father_name: string
+          gender: string
+          id: string
+          is_draft: boolean
+          last_edited_at: string | null
+          marksheet_url: string | null
+          mess_fee: number
+          mess_opted: boolean
+          mother_contact: string | null
+          mother_name: string | null
+          payment_mode: Database["public"]["Enums"]["payment_mode"]
+          photo_url: string | null
+          receipt_number: string | null
+          registration_id: string | null
+          registration_number: number | null
+          remarks: string | null
+          school_name: string
+          shift: Database["public"]["Enums"]["shift_type"]
+          student_name: string
+          total_amount: number
+          transport_address: string | null
+          transport_fee: number
+          transport_opted: boolean
+        }
+        Insert: {
+          activities?: Json
+          address: string
+          age: number
+          allergies_medications?: string | null
+          city: string
+          class: string
+          combo_applied?: boolean
+          combo_discount?: number
+          created_at?: string
+          date_of_birth: string
+          email: string
+          emergency_contact: string
+          enrolled_at?: string
+          enrolled_by: string
+          father_contact: string
+          father_name: string
+          gender: string
+          id?: string
+          is_draft?: boolean
+          last_edited_at?: string | null
+          marksheet_url?: string | null
+          mess_fee?: number
+          mess_opted?: boolean
+          mother_contact?: string | null
+          mother_name?: string | null
+          payment_mode: Database["public"]["Enums"]["payment_mode"]
+          photo_url?: string | null
+          receipt_number?: string | null
+          registration_id?: string | null
+          registration_number?: number | null
+          remarks?: string | null
+          school_name: string
+          shift: Database["public"]["Enums"]["shift_type"]
+          student_name: string
+          total_amount?: number
+          transport_address?: string | null
+          transport_fee?: number
+          transport_opted?: boolean
+        }
+        Update: {
+          activities?: Json
+          address?: string
+          age?: number
+          allergies_medications?: string | null
+          city?: string
+          class?: string
+          combo_applied?: boolean
+          combo_discount?: number
+          created_at?: string
+          date_of_birth?: string
+          email?: string
+          emergency_contact?: string
+          enrolled_at?: string
+          enrolled_by?: string
+          father_contact?: string
+          father_name?: string
+          gender?: string
+          id?: string
+          is_draft?: boolean
+          last_edited_at?: string | null
+          marksheet_url?: string | null
+          mess_fee?: number
+          mess_opted?: boolean
+          mother_contact?: string | null
+          mother_name?: string | null
+          payment_mode?: Database["public"]["Enums"]["payment_mode"]
+          photo_url?: string | null
+          receipt_number?: string | null
+          registration_id?: string | null
+          registration_number?: number | null
+          remarks?: string | null
+          school_name?: string
+          shift?: Database["public"]["Enums"]["shift_type"]
+          student_name?: string
+          total_amount?: number
+          transport_address?: string | null
+          transport_fee?: number
+          transport_opted?: boolean
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      next_admin_id: { Args: { _first_name: string }; Returns: string }
+      next_counter: { Args: { _name: string }; Returns: number }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "admin"
+      payment_mode: "CASH" | "ONLINE"
+      shift_type: "MORNING" | "EVENING"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +354,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "admin"],
+      payment_mode: ["CASH", "ONLINE"],
+      shift_type: ["MORNING", "EVENING"],
+    },
   },
 } as const
