@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SuperRouteImport } from './routes/super'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
 import { Route as ApiAdminResetPasswordRouteImport } from './routes/api/admin/reset-password'
 import { Route as ApiAdminCreateRouteImport } from './routes/api/admin/create'
 
+const SuperRoute = SuperRouteImport.update({
+  id: '/super',
+  path: '/super',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -44,6 +50,7 @@ const ApiAdminCreateRoute = ApiAdminCreateRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/super': typeof SuperRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/super': typeof SuperRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
@@ -59,6 +67,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/super': typeof SuperRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
@@ -68,6 +77,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/super'
     | '/api/admin/create'
     | '/api/admin/reset-password'
     | '/api/public/bootstrap'
@@ -75,6 +85,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/super'
     | '/api/admin/create'
     | '/api/admin/reset-password'
     | '/api/public/bootstrap'
@@ -82,6 +93,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/super'
     | '/api/admin/create'
     | '/api/admin/reset-password'
     | '/api/public/bootstrap'
@@ -90,6 +102,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  SuperRoute: typeof SuperRoute
   ApiAdminCreateRoute: typeof ApiAdminCreateRoute
   ApiAdminResetPasswordRoute: typeof ApiAdminResetPasswordRoute
   ApiPublicBootstrapRoute: typeof ApiPublicBootstrapRoute
@@ -97,6 +110,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/super': {
+      id: '/super'
+      path: '/super'
+      fullPath: '/super'
+      preLoaderRoute: typeof SuperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -138,6 +158,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  SuperRoute: SuperRoute,
   ApiAdminCreateRoute: ApiAdminCreateRoute,
   ApiAdminResetPasswordRoute: ApiAdminResetPasswordRoute,
   ApiPublicBootstrapRoute: ApiPublicBootstrapRoute,
@@ -145,3 +166,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
