@@ -9,38 +9,194 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SuperRouteImport } from './routes/super'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as EnrollRouteImport } from './routes/enroll'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AdminsRouteImport } from './routes/admins'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReceiptIdRouteImport } from './routes/receipt.$id'
+import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
+import { Route as ApiAdminResetPasswordRouteImport } from './routes/api/admin/reset-password'
+import { Route as ApiAdminCreateRouteImport } from './routes/api/admin/create'
 
+const SuperRoute = SuperRouteImport.update({
+  id: '/super',
+  path: '/super',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnrollRoute = EnrollRouteImport.update({
+  id: '/enroll',
+  path: '/enroll',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminsRoute = AdminsRouteImport.update({
+  id: '/admins',
+  path: '/admins',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReceiptIdRoute = ReceiptIdRouteImport.update({
+  id: '/receipt/$id',
+  path: '/receipt/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBootstrapRoute = ApiPublicBootstrapRouteImport.update({
+  id: '/api/public/bootstrap',
+  path: '/api/public/bootstrap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminResetPasswordRoute = ApiAdminResetPasswordRouteImport.update({
+  id: '/api/admin/reset-password',
+  path: '/api/admin/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminCreateRoute = ApiAdminCreateRouteImport.update({
+  id: '/api/admin/create',
+  path: '/api/admin/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admins': typeof AdminsRoute
+  '/dashboard': typeof DashboardRoute
+  '/enroll': typeof EnrollRoute
+  '/login': typeof LoginRoute
+  '/super': typeof SuperRoute
+  '/receipt/$id': typeof ReceiptIdRoute
+  '/api/admin/create': typeof ApiAdminCreateRoute
+  '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
+  '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admins': typeof AdminsRoute
+  '/dashboard': typeof DashboardRoute
+  '/enroll': typeof EnrollRoute
+  '/login': typeof LoginRoute
+  '/super': typeof SuperRoute
+  '/receipt/$id': typeof ReceiptIdRoute
+  '/api/admin/create': typeof ApiAdminCreateRoute
+  '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
+  '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admins': typeof AdminsRoute
+  '/dashboard': typeof DashboardRoute
+  '/enroll': typeof EnrollRoute
+  '/login': typeof LoginRoute
+  '/super': typeof SuperRoute
+  '/receipt/$id': typeof ReceiptIdRoute
+  '/api/admin/create': typeof ApiAdminCreateRoute
+  '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
+  '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admins'
+    | '/dashboard'
+    | '/enroll'
+    | '/login'
+    | '/super'
+    | '/receipt/$id'
+    | '/api/admin/create'
+    | '/api/admin/reset-password'
+    | '/api/public/bootstrap'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admins'
+    | '/dashboard'
+    | '/enroll'
+    | '/login'
+    | '/super'
+    | '/receipt/$id'
+    | '/api/admin/create'
+    | '/api/admin/reset-password'
+    | '/api/public/bootstrap'
+  id:
+    | '__root__'
+    | '/'
+    | '/admins'
+    | '/dashboard'
+    | '/enroll'
+    | '/login'
+    | '/super'
+    | '/receipt/$id'
+    | '/api/admin/create'
+    | '/api/admin/reset-password'
+    | '/api/public/bootstrap'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminsRoute: typeof AdminsRoute
+  DashboardRoute: typeof DashboardRoute
+  EnrollRoute: typeof EnrollRoute
+  LoginRoute: typeof LoginRoute
+  SuperRoute: typeof SuperRoute
+  ReceiptIdRoute: typeof ReceiptIdRoute
+  ApiAdminCreateRoute: typeof ApiAdminCreateRoute
+  ApiAdminResetPasswordRoute: typeof ApiAdminResetPasswordRoute
+  ApiPublicBootstrapRoute: typeof ApiPublicBootstrapRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/super': {
+      id: '/super'
+      path: '/super'
+      fullPath: '/super'
+      preLoaderRoute: typeof SuperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enroll': {
+      id: '/enroll'
+      path: '/enroll'
+      fullPath: '/enroll'
+      preLoaderRoute: typeof EnrollRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admins': {
+      id: '/admins'
+      path: '/admins'
+      fullPath: '/admins'
+      preLoaderRoute: typeof AdminsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,21 +204,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/receipt/$id': {
+      id: '/receipt/$id'
+      path: '/receipt/$id'
+      fullPath: '/receipt/$id'
+      preLoaderRoute: typeof ReceiptIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/bootstrap': {
+      id: '/api/public/bootstrap'
+      path: '/api/public/bootstrap'
+      fullPath: '/api/public/bootstrap'
+      preLoaderRoute: typeof ApiPublicBootstrapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/reset-password': {
+      id: '/api/admin/reset-password'
+      path: '/api/admin/reset-password'
+      fullPath: '/api/admin/reset-password'
+      preLoaderRoute: typeof ApiAdminResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/create': {
+      id: '/api/admin/create'
+      path: '/api/admin/create'
+      fullPath: '/api/admin/create'
+      preLoaderRoute: typeof ApiAdminCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminsRoute: AdminsRoute,
+  DashboardRoute: DashboardRoute,
+  EnrollRoute: EnrollRoute,
+  LoginRoute: LoginRoute,
+  SuperRoute: SuperRoute,
+  ReceiptIdRoute: ReceiptIdRoute,
+  ApiAdminCreateRoute: ApiAdminCreateRoute,
+  ApiAdminResetPasswordRoute: ApiAdminResetPasswordRoute,
+  ApiPublicBootstrapRoute: ApiPublicBootstrapRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
