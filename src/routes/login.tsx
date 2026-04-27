@@ -100,10 +100,10 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-soft via-background to-background px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
-            <Sun className="h-7 w-7" />
+          <div className="inline-flex items-center justify-center rounded-2xl ">
+            <img src="src\assets\logo.png" alt="Logo" className="h-36 w-36" />
           </div>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight">Summer Camp 2026</h1>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight">Ideal International School</h1>
           <p className="text-sm text-muted-foreground">Enrollment & Receipt Portal</p>
         </div>
 

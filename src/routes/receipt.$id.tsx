@@ -94,7 +94,9 @@ function ReceiptPage() {
 
       <div className="receipt-print mx-auto max-w-3xl bg-white text-[#1F2937] rounded-md shadow-sm border border-border p-8 print:shadow-none print:border-0">
         <header className="text-center border-b pb-4">
-          <h1 className="text-2xl font-bold tracking-tight">{CAMP_NAME.toUpperCase()}</h1>
+
+
+          <h1 className="text-2xl font-bold tracking-tight">IDEAL INTERNATIONAL SCHOOL</h1>
           <p className="text-sm text-muted-foreground">{ORG_NAME}</p>
           <div className="mt-3 flex justify-between text-xs">
             <div><b>Receipt No:</b> {data.receipt_number}</div>

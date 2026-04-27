@@ -26,10 +26,11 @@ export const Route = createFileRoute("/api/admin/create")({
           if (!callerId) return json({ error: "Unauthorized" }, 401);
 
           // Check super_admin role
-          const { data: roles } = await supabaseAdmin
+          const { data: roles, error: roleError } = await supabaseAdmin
             .from("user_roles")
             .select("role")
             .eq("user_id", callerId);
+          if (roleError) return json({ error: roleError.message }, 500);
           const isSA = roles?.some((r) => r.role === "super_admin");
           if (!isSA) return json({ error: "Forbidden" }, 403);
 
@@ -49,10 +50,9 @@ export const Route = createFileRoute("/api/admin/create")({
           }
 
           // Generate Admin ID
-          const { data: adminIdResp, error: idErr } = await supabaseAdmin.rpc(
-            "next_admin_id",
-            { _first_name: firstName },
-          );
+          const { data: adminIdResp, error: idErr } = await supabaseAdmin.rpc("next_admin_id", {
+            _first_name: firstName,
+          });
           if (idErr || !adminIdResp) return json({ error: idErr?.message || "id error" }, 500);
           const adminId = adminIdResp as string;
 

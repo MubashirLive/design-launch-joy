@@ -13,6 +13,7 @@ import { Route as SuperRouteImport } from './routes/super'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as EnrollRouteImport } from './routes/enroll'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ChangeEmailRouteImport } from './routes/change-email'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AdminsRouteImport } from './routes/admins'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,6 +21,7 @@ import { Route as ReceiptIdRouteImport } from './routes/receipt.$id'
 import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
 import { Route as ApiAdminResetPasswordRouteImport } from './routes/api/admin/reset-password'
 import { Route as ApiAdminCreateRouteImport } from './routes/api/admin/create'
+import { Route as ApiAccountChangeEmailRouteImport } from './routes/api/account/change-email'
 
 const SuperRoute = SuperRouteImport.update({
   id: '/super',
@@ -39,6 +41,11 @@ const EnrollRoute = EnrollRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangeEmailRoute = ChangeEmailRouteImport.update({
+  id: '/change-email',
+  path: '/change-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
@@ -76,16 +83,23 @@ const ApiAdminCreateRoute = ApiAdminCreateRouteImport.update({
   path: '/api/admin/create',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAccountChangeEmailRoute = ApiAccountChangeEmailRouteImport.update({
+  id: '/api/account/change-email',
+  path: '/api/account/change-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
+  '/change-email': typeof ChangeEmailRoute
   '/dashboard': typeof DashboardRoute
   '/enroll': typeof EnrollRoute
   '/login': typeof LoginRoute
   '/super': typeof SuperRoute
   '/receipt/$id': typeof ReceiptIdRoute
+  '/api/account/change-email': typeof ApiAccountChangeEmailRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
@@ -94,11 +108,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
+  '/change-email': typeof ChangeEmailRoute
   '/dashboard': typeof DashboardRoute
   '/enroll': typeof EnrollRoute
   '/login': typeof LoginRoute
   '/super': typeof SuperRoute
   '/receipt/$id': typeof ReceiptIdRoute
+  '/api/account/change-email': typeof ApiAccountChangeEmailRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
@@ -108,11 +124,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
+  '/change-email': typeof ChangeEmailRoute
   '/dashboard': typeof DashboardRoute
   '/enroll': typeof EnrollRoute
   '/login': typeof LoginRoute
   '/super': typeof SuperRoute
   '/receipt/$id': typeof ReceiptIdRoute
+  '/api/account/change-email': typeof ApiAccountChangeEmailRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
@@ -123,11 +141,13 @@ export interface FileRouteTypes {
     | '/'
     | '/admins'
     | '/analytics'
+    | '/change-email'
     | '/dashboard'
     | '/enroll'
     | '/login'
     | '/super'
     | '/receipt/$id'
+    | '/api/account/change-email'
     | '/api/admin/create'
     | '/api/admin/reset-password'
     | '/api/public/bootstrap'
@@ -136,11 +156,13 @@ export interface FileRouteTypes {
     | '/'
     | '/admins'
     | '/analytics'
+    | '/change-email'
     | '/dashboard'
     | '/enroll'
     | '/login'
     | '/super'
     | '/receipt/$id'
+    | '/api/account/change-email'
     | '/api/admin/create'
     | '/api/admin/reset-password'
     | '/api/public/bootstrap'
@@ -149,11 +171,13 @@ export interface FileRouteTypes {
     | '/'
     | '/admins'
     | '/analytics'
+    | '/change-email'
     | '/dashboard'
     | '/enroll'
     | '/login'
     | '/super'
     | '/receipt/$id'
+    | '/api/account/change-email'
     | '/api/admin/create'
     | '/api/admin/reset-password'
     | '/api/public/bootstrap'
@@ -163,11 +187,13 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminsRoute: typeof AdminsRoute
   AnalyticsRoute: typeof AnalyticsRoute
+  ChangeEmailRoute: typeof ChangeEmailRoute
   DashboardRoute: typeof DashboardRoute
   EnrollRoute: typeof EnrollRoute
   LoginRoute: typeof LoginRoute
   SuperRoute: typeof SuperRoute
   ReceiptIdRoute: typeof ReceiptIdRoute
+  ApiAccountChangeEmailRoute: typeof ApiAccountChangeEmailRoute
   ApiAdminCreateRoute: typeof ApiAdminCreateRoute
   ApiAdminResetPasswordRoute: typeof ApiAdminResetPasswordRoute
   ApiPublicBootstrapRoute: typeof ApiPublicBootstrapRoute
@@ -201,6 +227,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/change-email': {
+      id: '/change-email'
+      path: '/change-email'
+      fullPath: '/change-email'
+      preLoaderRoute: typeof ChangeEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/analytics': {
@@ -252,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/account/change-email': {
+      id: '/api/account/change-email'
+      path: '/api/account/change-email'
+      fullPath: '/api/account/change-email'
+      preLoaderRoute: typeof ApiAccountChangeEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -259,11 +299,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminsRoute: AdminsRoute,
   AnalyticsRoute: AnalyticsRoute,
+  ChangeEmailRoute: ChangeEmailRoute,
   DashboardRoute: DashboardRoute,
   EnrollRoute: EnrollRoute,
   LoginRoute: LoginRoute,
   SuperRoute: SuperRoute,
   ReceiptIdRoute: ReceiptIdRoute,
+  ApiAccountChangeEmailRoute: ApiAccountChangeEmailRoute,
   ApiAdminCreateRoute: ApiAdminCreateRoute,
   ApiAdminResetPasswordRoute: ApiAdminResetPasswordRoute,
   ApiPublicBootstrapRoute: ApiPublicBootstrapRoute,
