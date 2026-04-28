@@ -26,6 +26,17 @@ import {
   Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { fmtINR } from "@/lib/camp";
 
@@ -126,8 +137,8 @@ function SuperHome() {
 
   // filters
   const [filterAdmin, setFilterAdmin] = useState("all");
-  const [filterPayment, setFilterPayment] = useState("all");
-  const [filterShift, setFilterShift] = useState("all");
+  const [filterPayment, setFilterPayment] = useState<"all" | "CASH" | "ONLINE">("all");
+  const [filterShift, setFilterShift] = useState<"all" | "MORNING" | "EVENING">("all");
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
 
@@ -530,6 +541,40 @@ function SuperHome() {
                               >
                                 <Download className="h-3.5 w-3.5" />
                               </Link>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    disabled={deletingId === e.id}
+                                  >
+                                    {deletingId === e.id ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    )}
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Enrollment?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This will permanently delete the enrollment for <strong>{e.student_name}</strong>.
+                                      This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                                      onClick={() => handleDeleteEnrollment(e)}
+                                    >
+                                      Yes, delete enrollment
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </td>
                           <td className="px-4 py-2.5 text-center">

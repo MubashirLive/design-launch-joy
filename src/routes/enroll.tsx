@@ -342,7 +342,6 @@ function EnrollPage() {
         setExistingPhotoUrl(data.photo_url || null);
         setExistingMarksheetUrl(data.marksheet_url || null);
       })
-      .finally(() => setLoadingEdit(false));
   }, [edit, navigate, role, session]);
 
   const slotColor =
@@ -563,11 +562,11 @@ function EnrollPage() {
           {/* Participant Information */}
           <SectionCard title="Participant Information">
             <Field label="Student Name *">
-              <Input value={studentName} onChange={(e) => setStudentName(e.target.value)} />
+              <Input value={studentName} onChange={(e) => setStudentName(e.target.value.toLocaleUpperCase())} />
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Date of Birth *">
-                <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
+                <Input type="date" value={dob} onChange={(e) => setDob(e.target.value.toLocaleUpperCase())} />
               </Field>
               <Field label="Age">
                 <Input value={age ? `${age} years` : ""} readOnly className="bg-muted" />
@@ -599,7 +598,7 @@ function EnrollPage() {
                 </Select>
               </Field>
               <Field label="School Name (Session 2025-26) *">
-                <Input value={school} onChange={(e) => setSchool(e.target.value)} />
+                <Input value={school} onChange={(e) => setSchool(e.target.value.toLocaleUpperCase())} />
               </Field>
             </div>
             <Field label="Email *">
@@ -607,7 +606,7 @@ function EnrollPage() {
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Father's Name *">
-                <Input value={fatherName} onChange={(e) => setFatherName(e.target.value)} />
+                <Input value={fatherName} onChange={(e) => setFatherName(e.target.value.toLocaleUpperCase())} />
               </Field>
               <Field label="Father's Contact *">
                 <Input
@@ -619,7 +618,7 @@ function EnrollPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Mother's Name">
-                <Input value={motherName} onChange={(e) => setMotherName(e.target.value)} />
+                <Input value={motherName} onChange={(e) => setMotherName(e.target.value.toLocaleUpperCase())} />
               </Field>
               <Field label="Mother's Contact">
                 <Input
@@ -637,7 +636,7 @@ function EnrollPage() {
               />
             </Field>
             <Field label="Address *">
-              <Textarea value={address} onChange={(e) => setAddress(e.target.value)} />
+              <Textarea value={address} onChange={(e) => setAddress(e.target.value.toLocaleUpperCase())} />
             </Field>
             <Field label="City *">
               <RadioGroup
@@ -657,7 +656,7 @@ function EnrollPage() {
                   className="mt-2"
                   placeholder="City name"
                   value={otherCity}
-                  onChange={(e) => setOtherCity(e.target.value)}
+                  onChange={(e) => setOtherCity(e.target.value.toLocaleUpperCase())}
                 />
               )}
             </Field>
@@ -779,7 +778,7 @@ function EnrollPage() {
                     <Field label="Transport Address & Nearest Landmark *">
                       <Textarea
                         value={transportAddress}
-                        onChange={(e) => setTransportAddress(e.target.value)}
+                        onChange={(e) => setTransportAddress(e.target.value.toLocaleUpperCase())}
                       />
                     </Field>
                     <Field label="Transport Fee (₹) *">
@@ -801,7 +800,7 @@ function EnrollPage() {
           {/* Other Details */}
           <SectionCard title="Other Details">
             <Field label="Allergies & Medications">
-              <Textarea value={allergies} onChange={(e) => setAllergies(e.target.value)} />
+              <Textarea value={allergies} onChange={(e) => setAllergies(e.target.value.toLocaleUpperCase())} />
             </Field>
             <Field label="Mode of Payment *">
               <RadioGroup
@@ -818,7 +817,7 @@ function EnrollPage() {
               </RadioGroup>
             </Field>
             <Field label="Remarks">
-              <Textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} />
+              <Textarea value={remarks} onChange={(e) => setRemarks(e.target.value.toLocaleUpperCase())} />
             </Field>
           </SectionCard>
 

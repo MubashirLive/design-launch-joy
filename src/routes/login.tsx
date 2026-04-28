@@ -6,7 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Eye, EyeOff, Loader2, Sun } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Eye, EyeOff, Loader2, Sun, HelpCircle } from "lucide-react";
 import Logo from '../assets/logo.png'
 import { toast } from "sonner";
 
@@ -32,6 +40,14 @@ function LoginPage() {
   // Bootstrap fields
   const [bsEmail, setBsEmail] = useState("");
   const [bsPwd, setBsPwd] = useState("");
+
+  // Forgot ID fields
+  const [forgotDialogOpen, setForgotDialogOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotOtp, setForgotOtp] = useState("");
+  const [forgotStep, setForgotStep] = useState<"email" | "otp">("email");
+  const [forgotBusy, setForgotBusy] = useState(false);
+  const [recoveredId, setRecoveredId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/public/bootstrap")
@@ -97,6 +113,60 @@ function LoginPage() {
     }
   }
 
+  async function handleForgotSendOTP() {
+    if (!forgotEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    setForgotBusy(true);
+    try {
+      const r = await fetch("/api/account/forgot-id", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail.trim() }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Failed");
+      toast.success(d.message || "OTP sent to your email");
+      setForgotStep("otp");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setForgotBusy(false);
+    }
+  }
+
+  async function handleForgotVerifyOTP() {
+    if (!forgotOtp.trim()) {
+      toast.error("Please enter the OTP");
+      return;
+    }
+    setForgotBusy(true);
+    try {
+      const r = await fetch("/api/account/forgot-id", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail.trim(), otp: forgotOtp.trim() }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Failed");
+      setRecoveredId(d.admin_id);
+      toast.success("ID recovered successfully!");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setForgotBusy(false);
+    }
+  }
+
+  function resetForgotDialog() {
+    setForgotEmail("");
+    setForgotOtp("");
+    setForgotStep("email");
+    setRecoveredId(null);
+    setForgotDialogOpen(false);
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-soft via-background to-background px-4">
       <div className="w-full max-w-md">
@@ -157,6 +227,16 @@ function LoginPage() {
                       Sign in as Super Admin
                     </Button>
                   </form>
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setForgotDialogOpen(true)}
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      <HelpCircle className="h-3 w-3" />
+                      Forgot ID?
+                    </button>
+                  </div>
                   {needsBootstrap && (
                     <button
                       type="button"
@@ -191,6 +271,92 @@ function LoginPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Forgot ID Dialog */}
+        <Dialog open={forgotDialogOpen} onOpenChange={setForgotDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Forgot Super Admin ID?</DialogTitle>
+              <DialogDescription>
+                Enter your email address to receive an OTP and recover your admin ID.
+              </DialogDescription>
+            </DialogHeader>
+
+            {recoveredId ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-sm text-green-800">
+                    <strong>Your Admin ID is:</strong>
+                  </p>
+                  <p className="text-lg font-mono font-bold text-green-900 mt-1">
+                    {recoveredId}
+                  </p>
+                </div>
+                <DialogFooter>
+                  <Button onClick={resetForgotDialog} className="w-full">
+                    Close
+                  </Button>
+                </DialogFooter>
+              </div>
+            ) : forgotStep === "email" ? (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-email">Email Address</Label>
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder="Enter your super admin email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button
+                    onClick={handleForgotSendOTP}
+                    disabled={forgotBusy || !forgotEmail.trim()}
+                    className="w-full"
+                  >
+                    {forgotBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Send OTP
+                  </Button>
+                </DialogFooter>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-otp">OTP</Label>
+                  <Input
+                    id="forgot-otp"
+                    placeholder="Enter the 6-digit OTP"
+                    value={forgotOtp}
+                    onChange={(e) => setForgotOtp(e.target.value)}
+                    maxLength={6}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Check your email for the OTP. It may take a few minutes.
+                  </p>
+                </div>
+                <DialogFooter className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setForgotStep("email")}
+                    disabled={forgotBusy}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleForgotVerifyOTP}
+                    disabled={forgotBusy || !forgotOtp.trim()}
+                    className="flex-1"
+                  >
+                    {forgotBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Verify OTP
+                  </Button>
+                </DialogFooter>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

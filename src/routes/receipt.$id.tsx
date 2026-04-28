@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import Logo from '../assets/logo.png'
 
 export const Route = createFileRoute("/receipt/$id")({
   component: ReceiptPage,
@@ -173,8 +174,18 @@ function ReceiptPage() {
 
       <div className="receipt-print mx-auto max-w-3xl bg-white text-[#1F2937] rounded-md shadow-sm border border-border p-8 print:shadow-none print:border-0">
         <header className="text-center border-b pb-4">
-          <h1 className="text-2xl font-bold tracking-tight">IDEAL INTERNATIONAL SCHOOL</h1>
-          <p className="text-sm text-muted-foreground">{ORG_NAME}</p>
+
+          <div className="inline-flex justify-between items-center">
+            <div className="inline-flex items-center justify-center rounded-2xl ">
+              <img src={Logo} alt="Logo" className="h-24 w-24" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">IDEAL INTERNATIONAL SCHOOL, INDORE</h1>
+              <p className="text-sm text-muted-foreground">{ORG_NAME}</p>
+
+            </div>
+          </div>
+
           <div className="mt-3 flex justify-between text-xs">
             <div>
               <b>Receipt No:</b> {data.receipt_number}

@@ -21,6 +21,7 @@ import { Route as ReceiptIdRouteImport } from './routes/receipt.$id'
 import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
 import { Route as ApiAdminResetPasswordRouteImport } from './routes/api/admin/reset-password'
 import { Route as ApiAdminCreateRouteImport } from './routes/api/admin/create'
+import { Route as ApiAccountForgotIdRouteImport } from './routes/api/account/forgot-id'
 import { Route as ApiAccountChangeEmailRouteImport } from './routes/api/account/change-email'
 
 const SuperRoute = SuperRouteImport.update({
@@ -83,6 +84,11 @@ const ApiAdminCreateRoute = ApiAdminCreateRouteImport.update({
   path: '/api/admin/create',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAccountForgotIdRoute = ApiAccountForgotIdRouteImport.update({
+  id: '/api/account/forgot-id',
+  path: '/api/account/forgot-id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAccountChangeEmailRoute = ApiAccountChangeEmailRouteImport.update({
   id: '/api/account/change-email',
   path: '/api/account/change-email',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/super': typeof SuperRoute
   '/receipt/$id': typeof ReceiptIdRoute
   '/api/account/change-email': typeof ApiAccountChangeEmailRoute
+  '/api/account/forgot-id': typeof ApiAccountForgotIdRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/super': typeof SuperRoute
   '/receipt/$id': typeof ReceiptIdRoute
   '/api/account/change-email': typeof ApiAccountChangeEmailRoute
+  '/api/account/forgot-id': typeof ApiAccountForgotIdRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/super': typeof SuperRoute
   '/receipt/$id': typeof ReceiptIdRoute
   '/api/account/change-email': typeof ApiAccountChangeEmailRoute
+  '/api/account/forgot-id': typeof ApiAccountForgotIdRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/super'
     | '/receipt/$id'
     | '/api/account/change-email'
+    | '/api/account/forgot-id'
     | '/api/admin/create'
     | '/api/admin/reset-password'
     | '/api/public/bootstrap'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/super'
     | '/receipt/$id'
     | '/api/account/change-email'
+    | '/api/account/forgot-id'
     | '/api/admin/create'
     | '/api/admin/reset-password'
     | '/api/public/bootstrap'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/super'
     | '/receipt/$id'
     | '/api/account/change-email'
+    | '/api/account/forgot-id'
     | '/api/admin/create'
     | '/api/admin/reset-password'
     | '/api/public/bootstrap'
@@ -194,6 +206,7 @@ export interface RootRouteChildren {
   SuperRoute: typeof SuperRoute
   ReceiptIdRoute: typeof ReceiptIdRoute
   ApiAccountChangeEmailRoute: typeof ApiAccountChangeEmailRoute
+  ApiAccountForgotIdRoute: typeof ApiAccountForgotIdRoute
   ApiAdminCreateRoute: typeof ApiAdminCreateRoute
   ApiAdminResetPasswordRoute: typeof ApiAdminResetPasswordRoute
   ApiPublicBootstrapRoute: typeof ApiPublicBootstrapRoute
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/account/forgot-id': {
+      id: '/api/account/forgot-id'
+      path: '/api/account/forgot-id'
+      fullPath: '/api/account/forgot-id'
+      preLoaderRoute: typeof ApiAccountForgotIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/account/change-email': {
       id: '/api/account/change-email'
       path: '/api/account/change-email'
@@ -306,6 +326,7 @@ const rootRouteChildren: RootRouteChildren = {
   SuperRoute: SuperRoute,
   ReceiptIdRoute: ReceiptIdRoute,
   ApiAccountChangeEmailRoute: ApiAccountChangeEmailRoute,
+  ApiAccountForgotIdRoute: ApiAccountForgotIdRoute,
   ApiAdminCreateRoute: ApiAdminCreateRoute,
   ApiAdminResetPasswordRoute: ApiAdminResetPasswordRoute,
   ApiPublicBootstrapRoute: ApiPublicBootstrapRoute,

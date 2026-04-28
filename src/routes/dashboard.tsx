@@ -59,7 +59,7 @@ function AdminHome() {
   return (
     <AppShell title={`Welcome, ${adminProfile?.full_name?.split(" ")[0] || "Admin"}`}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <Link to="/enroll">
+        <Link to="/enroll" search={{}}>
           <Card className="hover:shadow-md transition-shadow border-2 hover:border-primary cursor-pointer h-full">
             <CardContent className="p-6 flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary inline-flex items-center justify-center">
