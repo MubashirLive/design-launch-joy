@@ -39,7 +39,7 @@ import {
 } from "lucide-react";
 import { fmtINR } from "@/lib/camp";
 
-export const Route = createFileRoute("/super-admin")({
+export const Route = createFileRoute("/super")({
   component: SuperAdminPage,
 });
 

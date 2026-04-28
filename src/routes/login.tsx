@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Eye, EyeOff, Loader2, Sun } from "lucide-react";
+import Logo from '../assets/logo.png'
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
@@ -101,7 +102,7 @@ function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center rounded-2xl ">
-            <img src="src\assets\logo.png" alt="Logo" className="h-36 w-36" />
+            <img src={Logo} alt="Logo" className="h-36 w-36" />
           </div>
           <h1 className="mt-4 text-3xl font-bold tracking-tight">Ideal International School</h1>
           <p className="text-sm text-muted-foreground">Enrollment & Receipt Portal</p>

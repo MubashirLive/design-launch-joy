@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Logo from '../assets/logo.png'
 
 export const Route = createFileRoute("/change-email")({
   component: ChangeEmailPage,
@@ -70,7 +71,7 @@ function ChangeEmailPage() {
     <div className="min-h-screen bg-background px-4 py-10">
       <div className="mx-auto w-full max-w-md">
         <div className="mb-8 text-center">
-          <img src="src\assets\logo.png" alt="Logo" className="mx-auto h-24 w-24" />
+          <img src={Logo} alt="Logo" className="mx-auto h-24 w-24" />
           <h1 className="mt-4 text-2xl font-bold tracking-tight">Change Login Email</h1>
           <p className="text-sm text-muted-foreground">Ideal International School, Indore</p>
         </div>

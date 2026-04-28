@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { LogOut, Loader2, Settings } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import Logo from '../assets/logo.png'
 
 export function AppShell({
   children,
@@ -34,7 +35,7 @@ export function AppShell({
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
             <div className="inline-flex items-center justify-center rounded-2xl ">
-              <img src="src\assets\logo.png" alt="Logo" className="h-14 w-14" />
+              <img src={Logo} alt="Logo" className="h-14 w-14" />
             </div>
             <div className="leading-tight">
               <div className="text-sm font-bold">Ideal International School, Indore</div>
