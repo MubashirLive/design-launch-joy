@@ -3,8 +3,20 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Loader2, Printer } from "lucide-react";
+import { ArrowLeft, Download, Loader2, Printer, Trash2 } from "lucide-react";
 import { CAMP_NAME, ORG_NAME, fmtINR } from "@/lib/camp";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/receipt/$id")({
   component: ReceiptPage,
@@ -35,6 +47,16 @@ interface Enrollment {
   payment_mode: "CASH" | "ONLINE";
   enrolled_at: string;
   enrolled_by: string;
+}
+
+function downloadAsPDF() {
+  // Use matchMedia to check if print is supported
+  if (window.matchMedia("print").matches) {
+    window.print();
+  } else {
+    // Fallback: just trigger print dialog directly
+    window.print();
+  }
 }
 
 function ReceiptPage() {
@@ -90,7 +112,18 @@ function ReceiptPage() {
     data.shift === "MORNING" ? "Morning (7:00 AM – 12:00 Noon)" : "Evening (5:00 PM – 7:00 PM)";
 
   const homeTo = role === "super_admin" ? "/super" : "/dashboard";
-  const downloadReceipt = () => window.print();
+
+  async function handleDelete() {
+    if (!data) return;
+    try {
+      const { error } = await supabase.from("enrollments").delete().eq("id", data.id);
+      if (error) throw error;
+      toast.success("Enrollment deleted");
+      navigate({ to: "/super" });
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-muted/40 py-6 px-4">
@@ -102,7 +135,7 @@ function ReceiptPage() {
         </Button>
         <div className="flex items-center gap-2">
           <Button
-            onClick={downloadReceipt}
+            onClick={downloadAsPDF}
             size="icon"
             title="Download receipt PDF"
             aria-label="Download receipt PDF"
@@ -112,6 +145,29 @@ function ReceiptPage() {
           <Button onClick={() => window.print()} variant="outline">
             <Printer className="h-4 w-4 mr-1" /> Print
           </Button>
+          {role === "super_admin" && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" title="Delete enrollment" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Enrollment?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete the enrollment for <strong>{data.student_name}</strong> (Receipt: {data.receipt_number}). This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                    Yes, delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       </div>
 

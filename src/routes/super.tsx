@@ -23,6 +23,7 @@ import {
   X,
   ExternalLink,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -121,6 +122,7 @@ function SuperHome() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [enrollmentsLoading, setEnrollmentsLoading] = useState(true);
   const [exportBusy, setExportBusy] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // filters
   const [filterAdmin, setFilterAdmin] = useState("all");
@@ -262,6 +264,20 @@ function SuperHome() {
     setFilterShift("all");
     setFilterFrom("");
     setFilterTo("");
+  }
+
+  async function handleDeleteEnrollment(enrollment: Enrollment) {
+    setDeletingId(enrollment.id);
+    try {
+      const { error } = await supabase.from("enrollments").delete().eq("id", enrollment.id);
+      if (error) throw error;
+      toast.success(`Enrollment for ${enrollment.student_name} deleted`);
+      // Refresh the list
+      fetchEnrollments();
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+    setDeletingId(null);
   }
 
   const hasFilters =
