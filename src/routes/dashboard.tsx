@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
-import { FilePlus2, Printer } from "lucide-react";
+import { Download, FilePlus2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtINR } from "@/lib/camp";
 
@@ -36,7 +36,9 @@ function AdminHome() {
     if (!session || role !== "admin") return;
     supabase
       .from("enrollments")
-      .select("id,receipt_number,registration_id,student_name,shift,total_amount,payment_mode,enrolled_at")
+      .select(
+        "id,receipt_number,registration_id,student_name,shift,total_amount,payment_mode,enrolled_at",
+      )
       .eq("is_draft", false)
       .order("enrolled_at", { ascending: false })
       .limit(50)
@@ -90,13 +92,23 @@ function AdminHome() {
           <table className="w-full text-sm">
             <thead className="bg-muted text-muted-foreground">
               <tr>
-                <Th>Receipt</Th><Th>Reg ID</Th><Th>Student</Th><Th>Shift</Th>
-                <Th>Amount</Th><Th>Mode</Th><Th>Date</Th><Th>{" "}</Th>
+                <Th>Receipt</Th>
+                <Th>Reg ID</Th>
+                <Th>Student</Th>
+                <Th>Shift</Th>
+                <Th>Amount</Th>
+                <Th>Mode</Th>
+                <Th>Date</Th>
+                <Th> </Th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">No enrollments yet.</td></tr>
+                <tr>
+                  <td colSpan={8} className="p-6 text-center text-muted-foreground">
+                    No enrollments yet.
+                  </td>
+                </tr>
               )}
               {rows.map((r) => (
                 <tr key={r.id} className="border-t hover:bg-muted/40">
@@ -108,9 +120,9 @@ function AdminHome() {
                   <Td>{r.payment_mode}</Td>
                   <Td className="text-xs">{new Date(r.enrolled_at).toLocaleString()}</Td>
                   <Td>
-                    <Link to="/receipt/$id" params={{ id: r.id }} className="inline-flex items-center text-primary text-xs hover:underline">
-                      <Printer className="h-3 w-3 mr-1" /> View
-                    </Link>
+                    <ButtonLink to="/receipt/$id" params={{ id: r.id }} title="Download receipt">
+                      <Download className="h-3.5 w-3.5" />
+                    </ButtonLink>
                   </Td>
                 </tr>
               ))}
@@ -128,3 +140,27 @@ const Th = ({ children }: { children: React.ReactNode }) => (
 const Td = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <td className={`px-3 py-2 ${className}`}>{children}</td>
 );
+
+function ButtonLink({
+  to,
+  params,
+  title,
+  children,
+}: {
+  to: "/receipt/$id";
+  params: { id: string };
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      to={to}
+      params={params}
+      title={title}
+      aria-label={title}
+      className="inline-flex h-8 w-8 items-center justify-center rounded-md border text-primary hover:bg-accent"
+    >
+      {children}
+    </Link>
+  );
+}

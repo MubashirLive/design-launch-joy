@@ -7,9 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { BarChart3, FilePlus2, Users, Download, Loader2, Filter, X, ExternalLink } from "lucide-react";
+import {
+  BarChart3,
+  FilePlus2,
+  Users,
+  Download,
+  Loader2,
+  Filter,
+  X,
+  ExternalLink,
+  Pencil,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { fmtINR } from "@/lib/camp";
@@ -49,14 +63,19 @@ interface Enrollment {
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-IN", {
-    day: "2-digit", month: "short", year: "numeric",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 }
 
 function fmtDateTime(iso: string) {
   return new Date(iso).toLocaleString("en-IN", {
-    day: "2-digit", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -66,16 +85,21 @@ function toCSV(rows: Record<string, unknown>[]): string {
   const escape = (v: unknown) => {
     const s = String(v ?? "");
     return s.includes(",") || s.includes('"') || s.includes("\n")
-      ? `"${s.replace(/"/g, '""')}"` : s;
+      ? `"${s.replace(/"/g, '""')}"`
+      : s;
   };
-  return [headers.join(","), ...rows.map((r) => headers.map((h) => escape(r[h])).join(","))].join("\n");
+  return [headers.join(","), ...rows.map((r) => headers.map((h) => escape(r[h])).join(","))].join(
+    "\n",
+  );
 }
 
 function downloadCSV(filename: string, csv: string) {
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = filename; a.click();
+  a.href = url;
+  a.download = filename;
+  a.click();
   URL.revokeObjectURL(url);
 }
 
@@ -108,7 +132,9 @@ function SuperHome() {
   // load admins once
   useEffect(() => {
     if (role !== "super_admin") return;
-    supabase.from("admins").select("id,user_id,admin_id,full_name,email")
+    supabase
+      .from("admins")
+      .select("id,user_id,admin_id,full_name,email")
       .then(({ data }) => setAdmins((data as AdminRow[]) || []));
   }, [role]);
 
@@ -118,7 +144,9 @@ function SuperHome() {
     try {
       let query = supabase
         .from("enrollments")
-        .select("id,student_name,class,shift,payment_mode,total_amount,enrolled_at,enrolled_by,receipt_number,registration_id,photo_url,marksheet_url")
+        .select(
+          "id,student_name,class,shift,payment_mode,total_amount,enrolled_at,enrolled_by,receipt_number,registration_id,photo_url,marksheet_url",
+        )
         .order("enrolled_at", { ascending: false })
         .limit(200);
 
@@ -159,7 +187,10 @@ function SuperHome() {
   async function handleExport() {
     setExportBusy(true);
     try {
-      let query = supabase.from("enrollments").select("*").order("enrolled_at", { ascending: false });
+      let query = supabase
+        .from("enrollments")
+        .select("*")
+        .order("enrolled_at", { ascending: false });
       if (filterPayment !== "all") query = query.eq("payment_mode", filterPayment);
       if (filterShift !== "all") query = query.eq("shift", filterShift);
       if (filterFrom) query = query.gte("enrolled_at", filterFrom);
@@ -226,12 +257,19 @@ function SuperHome() {
   }
 
   function clearFilters() {
-    setFilterAdmin("all"); setFilterPayment("all");
-    setFilterShift("all"); setFilterFrom(""); setFilterTo("");
+    setFilterAdmin("all");
+    setFilterPayment("all");
+    setFilterShift("all");
+    setFilterFrom("");
+    setFilterTo("");
   }
 
-  const hasFilters = filterAdmin !== "all" || filterPayment !== "all" ||
-    filterShift !== "all" || filterFrom !== "" || filterTo !== "";
+  const hasFilters =
+    filterAdmin !== "all" ||
+    filterPayment !== "all" ||
+    filterShift !== "all" ||
+    filterFrom !== "" ||
+    filterTo !== "";
 
   if (loading || role !== "super_admin") return null;
 
@@ -240,9 +278,24 @@ function SuperHome() {
       <div className="space-y-6">
         {/* ── Original navigation cards ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <DashCard to="/analytics" icon={<BarChart3 className="h-6 w-6" />} title="Analytics" desc="Revenue, trends, leaderboard" />
-          <DashCard to="/admins" icon={<Users className="h-6 w-6" />} title="Manage Admins" desc="Create, edit, reset, disable" />
-          <DashCard to="/enroll" icon={<FilePlus2 className="h-6 w-6" />} title="New Enrollment" desc="Fill a new student form" />
+          <DashCard
+            to="/analytics"
+            icon={<BarChart3 className="h-6 w-6" />}
+            title="Analytics"
+            desc="Revenue, trends, leaderboard"
+          />
+          <DashCard
+            to="/admins"
+            icon={<Users className="h-6 w-6" />}
+            title="Manage Admins"
+            desc="Create, edit, reset, disable"
+          />
+          <DashCard
+            to="/enroll"
+            icon={<FilePlus2 className="h-6 w-6" />}
+            title="New Enrollment"
+            desc="Fill a new student form"
+          />
         </div>
 
         {/* ── Recent Enrollments ── */}
@@ -250,8 +303,18 @@ function SuperHome() {
           <CardHeader className="pb-2">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <CardTitle className="text-base">Recent Enrollments</CardTitle>
-              <Button onClick={handleExport} disabled={exportBusy} size="sm" variant="outline" className="gap-1.5 self-start sm:self-auto">
-                {exportBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              <Button
+                onClick={handleExport}
+                disabled={exportBusy}
+                size="sm"
+                variant="outline"
+                className="gap-1.5 self-start sm:self-auto"
+              >
+                {exportBusy ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
                 Export CSV
               </Button>
             </div>
@@ -262,24 +325,33 @@ function SuperHome() {
             <div className="flex items-center gap-2 mb-2 text-xs font-medium text-muted-foreground">
               <Filter className="h-3.5 w-3.5" /> Filters
               {hasFilters && (
-                <button onClick={clearFilters} className="ml-1 flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] hover:bg-muted transition-colors">
+                <button
+                  onClick={clearFilters}
+                  className="ml-1 flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] hover:bg-muted transition-colors"
+                >
                   <X className="h-3 w-3" /> Clear all
                 </button>
               )}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
               <Select value={filterAdmin} onValueChange={setFilterAdmin}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Admins" /></SelectTrigger>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="All Admins" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Admins</SelectItem>
                   {admins.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>{a.full_name} ({a.admin_id})</SelectItem>
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.full_name} ({a.admin_id})
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
               <Select value={filterPayment} onValueChange={setFilterPayment}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Payments" /></SelectTrigger>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="All Payments" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Cash & Online</SelectItem>
                   <SelectItem value="CASH">Cash only</SelectItem>
@@ -288,7 +360,9 @@ function SuperHome() {
               </Select>
 
               <Select value={filterShift} onValueChange={setFilterShift}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Shifts" /></SelectTrigger>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="All Shifts" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Shifts</SelectItem>
                   <SelectItem value="MORNING">Morning</SelectItem>
@@ -298,23 +372,49 @@ function SuperHome() {
 
               <div className="space-y-0.5">
                 <label className="text-[10px] text-muted-foreground pl-0.5">From</label>
-                <Input type="date" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} className="h-8 text-xs" />
+                <Input
+                  type="date"
+                  value={filterFrom}
+                  onChange={(e) => setFilterFrom(e.target.value)}
+                  className="h-8 text-xs"
+                />
               </div>
 
               <div className="space-y-0.5">
                 <label className="text-[10px] text-muted-foreground pl-0.5">To</label>
-                <Input type="date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} className="h-8 text-xs" />
+                <Input
+                  type="date"
+                  value={filterTo}
+                  onChange={(e) => setFilterTo(e.target.value)}
+                  className="h-8 text-xs"
+                />
               </div>
             </div>
 
             {/* Active filter chips */}
             {hasFilters && (
               <div className="flex flex-wrap gap-1.5 mt-2">
-                {filterAdmin !== "all" && <Chip label={`Admin: ${admins.find((a) => a.id === filterAdmin)?.full_name}`} onRemove={() => setFilterAdmin("all")} />}
-                {filterPayment !== "all" && <Chip label={`Payment: ${filterPayment}`} onRemove={() => setFilterPayment("all")} />}
-                {filterShift !== "all" && <Chip label={`Shift: ${filterShift}`} onRemove={() => setFilterShift("all")} />}
-                {filterFrom && <Chip label={`From: ${fmtDate(filterFrom)}`} onRemove={() => setFilterFrom("")} />}
-                {filterTo && <Chip label={`To: ${fmtDate(filterTo)}`} onRemove={() => setFilterTo("")} />}
+                {filterAdmin !== "all" && (
+                  <Chip
+                    label={`Admin: ${admins.find((a) => a.id === filterAdmin)?.full_name}`}
+                    onRemove={() => setFilterAdmin("all")}
+                  />
+                )}
+                {filterPayment !== "all" && (
+                  <Chip
+                    label={`Payment: ${filterPayment}`}
+                    onRemove={() => setFilterPayment("all")}
+                  />
+                )}
+                {filterShift !== "all" && (
+                  <Chip label={`Shift: ${filterShift}`} onRemove={() => setFilterShift("all")} />
+                )}
+                {filterFrom && (
+                  <Chip label={`From: ${fmtDate(filterFrom)}`} onRemove={() => setFilterFrom("")} />
+                )}
+                {filterTo && (
+                  <Chip label={`To: ${fmtDate(filterTo)}`} onRemove={() => setFilterTo("")} />
+                )}
               </div>
             )}
           </div>
@@ -322,13 +422,18 @@ function SuperHome() {
           {/* Table */}
           <CardContent className="p-0">
             {enrollmentsLoading ? (
-              <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
             ) : enrollments.length === 0 ? (
-              <div className="py-12 text-center text-sm text-muted-foreground">No enrollments match the selected filters.</div>
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                No enrollments match the selected filters.
+              </div>
             ) : (
               <>
                 <div className="px-4 py-2 text-xs text-muted-foreground border-b">
-                  Showing {enrollments.length} record{enrollments.length !== 1 ? "s" : ""}{hasFilters ? " (filtered)" : ""}
+                  Showing {enrollments.length} record{enrollments.length !== 1 ? "s" : ""}
+                  {hasFilters ? " (filtered)" : ""}
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -342,41 +447,103 @@ function SuperHome() {
                         <th className="px-4 py-2 text-right whitespace-nowrap">Amount</th>
                         <th className="px-4 py-2 whitespace-nowrap">Enrolled By</th>
                         <th className="px-4 py-2 whitespace-nowrap">Date</th>
+                        <th className="px-4 py-2 text-center">Actions</th>
                         <th className="px-4 py-2 text-center">Docs</th>
                       </tr>
                     </thead>
                     <tbody>
                       {enrollments.map((e) => (
-                        <tr key={e.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                          <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{e.registration_id ?? "—"}</td>
-                          <td className="px-4 py-2.5 font-medium whitespace-nowrap">{e.student_name}</td>
+                        <tr
+                          key={e.id}
+                          className="border-b last:border-0 hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
+                            {e.registration_id ?? "—"}
+                          </td>
+                          <td className="px-4 py-2.5 font-medium whitespace-nowrap">
+                            {e.student_name}
+                          </td>
                           <td className="px-4 py-2.5">{e.class}</td>
                           <td className="px-4 py-2.5">
-                            <Badge variant="outline" className={`text-[11px] ${e.shift === "MORNING" ? "border-amber-400 text-amber-700 bg-amber-50" : "border-indigo-400 text-indigo-700 bg-indigo-50"}`}>
+                            <Badge
+                              variant="outline"
+                              className={`text-[11px] ${e.shift === "MORNING" ? "border-amber-400 text-amber-700 bg-amber-50" : "border-indigo-400 text-indigo-700 bg-indigo-50"}`}
+                            >
                               {e.shift === "MORNING" ? "🌅 Morning" : "🌆 Evening"}
                             </Badge>
                           </td>
                           <td className="px-4 py-2.5">
-                            <Badge variant="outline" className={`text-[11px] ${e.payment_mode === "CASH" ? "border-green-400 text-green-700 bg-green-50" : "border-blue-400 text-blue-700 bg-blue-50"}`}>
+                            <Badge
+                              variant="outline"
+                              className={`text-[11px] ${e.payment_mode === "CASH" ? "border-green-400 text-green-700 bg-green-50" : "border-blue-400 text-blue-700 bg-blue-50"}`}
+                            >
                               {e.payment_mode === "CASH" ? "💵 Cash" : "🔁 Online"}
                             </Badge>
                           </td>
-                          <td className="px-4 py-2.5 text-right font-semibold tabular-nums">{fmtINR(e.total_amount)}</td>
+                          <td className="px-4 py-2.5 text-right font-semibold tabular-nums">
+                            {fmtINR(e.total_amount)}
+                          </td>
                           <td className="px-4 py-2.5 text-xs whitespace-nowrap">
                             <span className="font-medium">{e.admin_name}</span>
                             {e.admin_id_label && e.admin_id_label !== "—" && (
-                              <span className="block text-[10px] text-muted-foreground font-mono">{e.admin_id_label}</span>
+                              <span className="block text-[10px] text-muted-foreground font-mono">
+                                {e.admin_id_label}
+                              </span>
                             )}
                           </td>
-                          <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{fmtDate(e.enrolled_at)}</td>
+                          <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                            {fmtDate(e.enrolled_at)}
+                          </td>
                           <td className="px-4 py-2.5 text-center">
                             <div className="flex items-center justify-center gap-1.5">
-                              {e.photo_url
-                                ? <a href={e.photo_url} target="_blank" rel="noopener noreferrer" title="View photo" className="text-muted-foreground hover:text-primary"><ExternalLink className="h-3.5 w-3.5" /></a>
-                                : <span className="text-[10px] text-muted-foreground/40">—</span>}
-                              {e.marksheet_url
-                                ? <a href={e.marksheet_url} target="_blank" rel="noopener noreferrer" title="View marksheet" className="text-muted-foreground hover:text-primary"><ExternalLink className="h-3.5 w-3.5" /></a>
-                                : <span className="text-[10px] text-muted-foreground/40">—</span>}
+                              <Link
+                                to="/enroll"
+                                search={{ edit: e.id }}
+                                title="Edit submitted form"
+                                aria-label="Edit submitted form"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-md border text-primary hover:bg-accent"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Link>
+                              <Link
+                                to="/receipt/$id"
+                                params={{ id: e.id }}
+                                title="Download receipt"
+                                aria-label="Download receipt"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-md border text-primary hover:bg-accent"
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                              </Link>
+                            </div>
+                          </td>
+                          <td className="px-4 py-2.5 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              {e.photo_url ? (
+                                <a
+                                  href={e.photo_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title="View photo"
+                                  className="text-muted-foreground hover:text-primary"
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                </a>
+                              ) : (
+                                <span className="text-[10px] text-muted-foreground/40">—</span>
+                              )}
+                              {e.marksheet_url ? (
+                                <a
+                                  href={e.marksheet_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title="View marksheet"
+                                  className="text-muted-foreground hover:text-primary"
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                </a>
+                              ) : (
+                                <span className="text-[10px] text-muted-foreground/40">—</span>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -386,7 +553,9 @@ function SuperHome() {
                 </div>
                 <div className="border-t px-4 py-2.5 flex justify-between items-center text-sm">
                   <span className="text-xs text-muted-foreground">Revenue (filtered)</span>
-                  <span className="font-bold">{fmtINR(enrollments.reduce((s, e) => s + e.total_amount, 0))}</span>
+                  <span className="font-bold">
+                    {fmtINR(enrollments.reduce((s, e) => s + e.total_amount, 0))}
+                  </span>
                 </div>
               </>
             )}
@@ -399,7 +568,17 @@ function SuperHome() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function DashCard({ to, icon, title, desc }: { to: string; icon: React.ReactNode; title: string; desc: string }) {
+function DashCard({
+  to,
+  icon,
+  title,
+  desc,
+}: {
+  to: string;
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
   return (
     <Link to={to}>
       <Card className="hover:shadow-md transition-shadow border-2 hover:border-primary cursor-pointer h-full">
@@ -422,7 +601,9 @@ function Chip({ label, onRemove }: { label: string | undefined; onRemove: () => 
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
       {label}
-      <button onClick={onRemove} className="ml-0.5 hover:text-primary/60"><X className="h-3 w-3" /></button>
+      <button onClick={onRemove} className="ml-0.5 hover:text-primary/60">
+        <X className="h-3 w-3" />
+      </button>
     </span>
   );
 }

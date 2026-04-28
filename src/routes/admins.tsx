@@ -8,11 +8,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Plus, Loader2, KeyRound, Trash2, Pencil } from "lucide-react";
@@ -39,6 +50,7 @@ function AdminsPage() {
   const [rows, setRows] = useState<AdminRow[]>([]);
   const [reloadTick, setReloadTick] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<AdminRow | null>(null);
   const [resetTarget, setResetTarget] = useState<AdminRow | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -53,7 +65,10 @@ function AdminsPage() {
       .from("admins")
       .select("*")
       .order("created_at", { ascending: false })
-      .then(({ data }) => setRows((data as AdminRow[]) || []));
+      .then(({ data, error }) => {
+        if (error) toast.error(error.message);
+        else setRows((data as AdminRow[]) || []);
+      });
   }, [role, reloadTick]);
 
   async function toggleActive(row: AdminRow) {
@@ -91,12 +106,23 @@ function AdminsPage() {
 
   return (
     <AppShell title="Manage Admins">
-      <div className="flex justify-end mb-3">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">
+          Create admins, edit details, enable or disable access, reset passwords, and delete
+          accounts when needed.
+        </p>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-1" /> Create Admin</Button>
+            <Button className="self-start sm:self-auto">
+              <Plus className="h-4 w-4 mr-1" /> Create Admin
+            </Button>
           </DialogTrigger>
-          <CreateAdminDialog onCreated={() => { setCreateOpen(false); setReloadTick((x) => x + 1); }} />
+          <CreateAdminDialog
+            onCreated={() => {
+              setCreateOpen(false);
+              setReloadTick((x) => x + 1);
+            }}
+          />
         </Dialog>
       </div>
       <Card>
@@ -104,13 +130,21 @@ function AdminsPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted text-muted-foreground">
               <tr>
-                <Th>Admin ID</Th><Th>Full Name</Th><Th>Email</Th><Th>Status</Th>
-                <Th>Forms</Th><Th>Actions</Th>
+                <Th>Admin ID</Th>
+                <Th>Full Name</Th>
+                <Th>Email</Th>
+                <Th>Status</Th>
+                <Th>Forms</Th>
+                <Th>Actions</Th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No admins yet.</td></tr>
+                <tr>
+                  <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                    No admins yet.
+                  </td>
+                </tr>
               )}
               {rows.map((r) => (
                 <tr key={r.id} className="border-t hover:bg-muted/40">
@@ -118,7 +152,7 @@ function AdminsPage() {
                   <Td>{r.full_name}</Td>
                   <Td className="text-muted-foreground">{r.email}</Td>
                   <Td>
-                    <div className="flex items-center gap-2">
+                    <div className="flex min-w-[360px] flex-wrap items-center gap-2">
                       <Switch checked={r.is_active} onCheckedChange={() => toggleActive(r)} />
                       <span className="text-xs">{r.is_active ? "Active" : "Disabled"}</span>
                     </div>
@@ -127,8 +161,20 @@ function AdminsPage() {
                   <Td>
                     <div className="flex items-center gap-2">
                       {/* Original reset password button — untouched */}
+                      <Button size="sm" variant="outline" onClick={() => setEditTarget(r)}>
+                        <Pencil className="h-3 w-3 mr-1" /> Edit
+                      </Button>
+
                       <Button size="sm" variant="outline" onClick={() => setResetTarget(r)}>
                         <KeyRound className="h-3 w-3 mr-1" /> Reset password
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant={r.is_active ? "secondary" : "outline"}
+                        onClick={() => toggleActive(r)}
+                      >
+                        {r.is_active ? "Disable" : "Enable"}
                       </Button>
 
                       {/* NEW: Delete button */}
@@ -140,18 +186,19 @@ function AdminsPage() {
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             disabled={deletingId === r.id}
                           >
-                            {deletingId === r.id
-                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              : <Trash2 className="h-3.5 w-3.5" />}
+                            {deletingId === r.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Admin?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will permanently remove{" "}
-                              <strong>{r.full_name}</strong> ({r.admin_id}) and
-                              revoke their login access. Their past enrollment
+                              This will permanently remove <strong>{r.full_name}</strong> (
+                              {r.admin_id}) and revoke their login access. Their past enrollment
                               records will be kept. This cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
@@ -175,10 +222,12 @@ function AdminsPage() {
         </CardContent>
       </Card>
 
-      <ResetPasswordDialog
-        target={resetTarget}
-        onClose={() => setResetTarget(null)}
+      <EditAdminDialog
+        target={editTarget}
+        onClose={() => setEditTarget(null)}
+        onSaved={() => setReloadTick((x) => x + 1)}
       />
+      <ResetPasswordDialog target={resetTarget} onClose={() => setResetTarget(null)} />
     </AppShell>
   );
 }
@@ -193,19 +242,29 @@ function CreateAdminDialog({ onCreated }: { onCreated: () => void }) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
     setBusy(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const r = await fetch("/api/admin/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
         body: JSON.stringify({ fullName, email, password, firstName: fullName.split(" ")[0] }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "Failed");
       toast.success(`Created ${d.adminId}`);
-      setFullName(""); setEmail(""); setPassword("");
+      setFullName("");
+      setEmail("");
+      setPassword("");
       onCreated();
     } catch (err) {
       toast.error((err as Error).message);
@@ -216,12 +275,16 @@ function CreateAdminDialog({ onCreated }: { onCreated: () => void }) {
 
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>Create Admin</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle>Create Admin</DialogTitle>
+      </DialogHeader>
       <form onSubmit={submit} className="space-y-4">
         <div className="space-y-2">
           <Label>Full Name</Label>
           <Input required value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          <p className="text-[11px] text-muted-foreground">Admin ID auto-generated from first name.</p>
+          <p className="text-[11px] text-muted-foreground">
+            Admin ID auto-generated from first name.
+          </p>
         </div>
         <div className="space-y-2">
           <Label>Email</Label>
@@ -229,7 +292,12 @@ function CreateAdminDialog({ onCreated }: { onCreated: () => void }) {
         </div>
         <div className="space-y-2">
           <Label>Initial Password</Label>
-          <Input type="text" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input
+            type="text"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </div>
         <DialogFooter>
           <Button type="submit" disabled={busy}>
@@ -244,21 +312,117 @@ function CreateAdminDialog({ onCreated }: { onCreated: () => void }) {
 
 // ─── ResetPasswordDialog — unchanged from original ────────────────────────────
 
-function ResetPasswordDialog({ target, onClose }: { target: AdminRow | null; onClose: () => void }) {
-  const [pwd, setPwd] = useState("");
+function EditAdminDialog({
+  target,
+  onClose,
+  onSaved,
+}: {
+  target: AdminRow | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
-  useEffect(() => { setPwd(""); }, [target]);
+
+  useEffect(() => {
+    setFullName(target?.full_name || "");
+    setEmail(target?.email || "");
+  }, [target]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!target) return;
-    if (pwd.length < 6) { toast.error("Min 6 chars"); return; }
+
+    if (!fullName.trim() || !email.trim()) {
+      toast.error("Full name and email are required");
+      return;
+    }
+
     setBusy(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { error } = await supabase
+        .from("admins")
+        .update({ full_name: fullName.trim(), email: email.trim() })
+        .eq("id", target.id);
+      if (error) throw error;
+
+      toast.success("Admin updated");
+      onSaved();
+      onClose();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog
+      open={!!target}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit admin - {target?.admin_id}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Full Name</Label>
+            <Input required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={busy}>
+              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ResetPasswordDialog({
+  target,
+  onClose,
+}: {
+  target: AdminRow | null;
+  onClose: () => void;
+}) {
+  const [pwd, setPwd] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    setPwd("");
+  }, [target]);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!target) return;
+    if (pwd.length < 6) {
+      toast.error("Min 6 chars");
+      return;
+    }
+    setBusy(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const r = await fetch("/api/admin/reset-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
         body: JSON.stringify({ adminId: target.admin_id, newPassword: pwd }),
       });
       const d = await r.json();
@@ -267,13 +431,22 @@ function ResetPasswordDialog({ target, onClose }: { target: AdminRow | null; onC
       onClose();
     } catch (err) {
       toast.error((err as Error).message);
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <Dialog open={!!target} onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Dialog
+      open={!!target}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
       <DialogContent>
-        <DialogHeader><DialogTitle>Reset password — {target?.admin_id}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Reset password — {target?.admin_id}</DialogTitle>
+        </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-2">
             <Label>New password</Label>
