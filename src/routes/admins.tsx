@@ -10,7 +10,12 @@ import { Switch } from "@/components/ui/switch";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Loader2, KeyRound } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Plus, Loader2, KeyRound, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -35,6 +40,7 @@ function AdminsPage() {
   const [reloadTick, setReloadTick] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
   const [resetTarget, setResetTarget] = useState<AdminRow | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -60,6 +66,25 @@ function AdminsPage() {
       toast.success(`${row.admin_id} ${!row.is_active ? "enabled" : "disabled"}`);
       setReloadTick((x) => x + 1);
     }
+  }
+
+  async function handleDelete(row: AdminRow) {
+    setDeletingId(row.id);
+    try {
+      // 1. Remove from admins table
+      const { error: e1 } = await supabase.from("admins").delete().eq("id", row.id);
+      if (e1) throw e1;
+
+      // 2. Remove their role so they lose login access
+      const { error: e2 } = await supabase.from("user_roles").delete().eq("user_id", row.user_id);
+      if (e2) throw e2;
+
+      toast.success(`Admin "${row.full_name}" (${row.admin_id}) deleted`);
+      setReloadTick((x) => x + 1);
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+    setDeletingId(null);
   }
 
   if (loading || role !== "super_admin") return null;
@@ -100,9 +125,48 @@ function AdminsPage() {
                   </Td>
                   <Td>{r.forms_filled_count}</Td>
                   <Td>
-                    <Button size="sm" variant="outline" onClick={() => setResetTarget(r)}>
-                      <KeyRound className="h-3 w-3 mr-1" /> Reset password
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {/* Original reset password button — untouched */}
+                      <Button size="sm" variant="outline" onClick={() => setResetTarget(r)}>
+                        <KeyRound className="h-3 w-3 mr-1" /> Reset password
+                      </Button>
+
+                      {/* NEW: Delete button */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            disabled={deletingId === r.id}
+                          >
+                            {deletingId === r.id
+                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              : <Trash2 className="h-3.5 w-3.5" />}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Admin?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently remove{" "}
+                              <strong>{r.full_name}</strong> ({r.admin_id}) and
+                              revoke their login access. Their past enrollment
+                              records will be kept. This cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                              onClick={() => handleDelete(r)}
+                            >
+                              Yes, delete admin
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </Td>
                 </tr>
               ))}
@@ -119,6 +183,8 @@ function AdminsPage() {
   );
 }
 
+// ─── CreateAdminDialog — unchanged from original ──────────────────────────────
+
 function CreateAdminDialog({ onCreated }: { onCreated: () => void }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -127,25 +193,14 @@ function CreateAdminDialog({ onCreated }: { onCreated: () => void }) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
-    }
+    if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     setBusy(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const r = await fetch("/api/admin/create", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({
-          fullName,
-          email,
-          password,
-          firstName: fullName.split(" ")[0],
-        }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ fullName, email, password, firstName: fullName.split(" ")[0] }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "Failed");
@@ -161,9 +216,7 @@ function CreateAdminDialog({ onCreated }: { onCreated: () => void }) {
 
   return (
     <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Create Admin</DialogTitle>
-      </DialogHeader>
+      <DialogHeader><DialogTitle>Create Admin</DialogTitle></DialogHeader>
       <form onSubmit={submit} className="space-y-4">
         <div className="space-y-2">
           <Label>Full Name</Label>
@@ -189,9 +242,9 @@ function CreateAdminDialog({ onCreated }: { onCreated: () => void }) {
   );
 }
 
-function ResetPasswordDialog({
-  target, onClose,
-}: { target: AdminRow | null; onClose: () => void }) {
+// ─── ResetPasswordDialog — unchanged from original ────────────────────────────
+
+function ResetPasswordDialog({ target, onClose }: { target: AdminRow | null; onClose: () => void }) {
   const [pwd, setPwd] = useState("");
   const [busy, setBusy] = useState(false);
   useEffect(() => { setPwd(""); }, [target]);
@@ -220,9 +273,7 @@ function ResetPasswordDialog({
   return (
     <Dialog open={!!target} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Reset password — {target?.admin_id}</DialogTitle>
-        </DialogHeader>
+        <DialogHeader><DialogTitle>Reset password — {target?.admin_id}</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-2">
             <Label>New password</Label>
@@ -239,6 +290,8 @@ function ResetPasswordDialog({
     </Dialog>
   );
 }
+
+// ─── Table helpers — unchanged ────────────────────────────────────────────────
 
 const Th = ({ children }: { children: React.ReactNode }) => (
   <th className="text-left text-xs font-medium px-3 py-2">{children}</th>
