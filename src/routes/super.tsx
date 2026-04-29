@@ -60,6 +60,7 @@ interface Enrollment {
   class: string;
   shift: "MORNING" | "EVENING";
   payment_mode: "CASH" | "ONLINE";
+  transaction_id: string | null;
   total_amount: number;
   enrolled_at: string;
   enrolled_by: string;
@@ -158,7 +159,7 @@ function SuperHome() {
       let query = supabase
         .from("enrollments")
         .select(
-          "id,student_name,class,shift,payment_mode,total_amount,enrolled_at,enrolled_by,receipt_number,registration_id,photo_url,marksheet_url",
+          "id,student_name,class,shift,payment_mode,transaction_id,total_amount,enrolled_at,enrolled_by,receipt_number,registration_id,photo_url,marksheet_url",
         )
         .order("enrolled_at", { ascending: false })
         .limit(200);
@@ -246,6 +247,7 @@ function SuperHome() {
           Combo_Discount: e.combo_discount,
           Total_Amount: e.total_amount,
           Payment_Mode: e.payment_mode,
+          Transaction_ID: e.transaction_id ?? "",
           Allergies: e.allergies_medications ?? "",
           Remarks: e.remarks ?? "",
           Photo_URL: e.photo_url ?? "",
@@ -544,10 +546,12 @@ function SuperHome() {
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button
-                                    size="sm"
+                                    size="icon"
                                     variant="ghost"
-                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                                     disabled={deletingId === e.id}
+                                    title="Delete enrollment"
+                                    aria-label="Delete enrollment"
                                   >
                                     {deletingId === e.id ? (
                                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -560,8 +564,9 @@ function SuperHome() {
                                   <AlertDialogHeader>
                                     <AlertDialogTitle>Delete Enrollment?</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      This will permanently delete the enrollment for <strong>{e.student_name}</strong>.
-                                      This action cannot be undone.
+                                      This will permanently delete the enrollment for{" "}
+                                      <strong>{e.student_name}</strong>. This action cannot be
+                                      undone.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>

@@ -184,6 +184,7 @@ function EnrollPage() {
 
   const [allergies, setAllergies] = useState("");
   const [paymentMode, setPaymentMode] = useState<"CASH" | "ONLINE" | "">("");
+  const [transactionId, setTransactionId] = useState("");
   const [remarks, setRemarks] = useState("");
 
   // ── NEW: file states ──────────────────────────────────────────────────────
@@ -338,10 +339,11 @@ function EnrollPage() {
         setTransportFee(data.transport_fee || "");
         setAllergies(data.allergies_medications || "");
         setPaymentMode(data.payment_mode || "");
+        setTransactionId(data.transaction_id || "");
         setRemarks(data.remarks || "");
         setExistingPhotoUrl(data.photo_url || null);
         setExistingMarksheetUrl(data.marksheet_url || null);
-      })
+      });
   }, [edit, navigate, role, session]);
 
   const slotColor =
@@ -372,6 +374,7 @@ function EnrollPage() {
       if (typeof transportFee !== "number" || transportFee <= 0) return "Transport fee required";
     }
     if (!paymentMode) return "Payment mode required";
+    if (paymentMode === "ONLINE" && !transactionId.trim()) return "Transaction ID is required";
     return null;
   }
 
@@ -443,6 +446,7 @@ function EnrollPage() {
             combo_discount: fee.combo_discount,
             total_amount: fee.total,
             payment_mode: paymentMode as "CASH" | "ONLINE",
+            transaction_id: paymentMode === "ONLINE" ? transactionId.trim() : null,
             allergies_medications: allergies || null,
             remarks: remarks || null,
             photo_url: photoUrl,
@@ -517,6 +521,7 @@ function EnrollPage() {
           combo_discount: fee.combo_discount,
           total_amount: fee.total,
           payment_mode: paymentMode as "CASH" | "ONLINE",
+          transaction_id: paymentMode === "ONLINE" ? transactionId.trim() : null,
           allergies_medications: allergies || null,
           remarks: remarks || null,
           enrolled_by: session.user.id,
@@ -562,11 +567,18 @@ function EnrollPage() {
           {/* Participant Information */}
           <SectionCard title="Participant Information">
             <Field label="Student Name *">
-              <Input value={studentName} onChange={(e) => setStudentName(e.target.value.toLocaleUpperCase())} />
+              <Input
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value.toLocaleUpperCase())}
+              />
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Date of Birth *">
-                <Input type="date" value={dob} onChange={(e) => setDob(e.target.value.toLocaleUpperCase())} />
+                <Input
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value.toLocaleUpperCase())}
+                />
               </Field>
               <Field label="Age">
                 <Input value={age ? `${age} years` : ""} readOnly className="bg-muted" />
@@ -598,7 +610,10 @@ function EnrollPage() {
                 </Select>
               </Field>
               <Field label="School Name (Session 2025-26) *">
-                <Input value={school} onChange={(e) => setSchool(e.target.value.toLocaleUpperCase())} />
+                <Input
+                  value={school}
+                  onChange={(e) => setSchool(e.target.value.toLocaleUpperCase())}
+                />
               </Field>
             </div>
             <Field label="Email *">
@@ -606,7 +621,10 @@ function EnrollPage() {
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Father's Name *">
-                <Input value={fatherName} onChange={(e) => setFatherName(e.target.value.toLocaleUpperCase())} />
+                <Input
+                  value={fatherName}
+                  onChange={(e) => setFatherName(e.target.value.toLocaleUpperCase())}
+                />
               </Field>
               <Field label="Father's Contact *">
                 <Input
@@ -618,7 +636,10 @@ function EnrollPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Mother's Name">
-                <Input value={motherName} onChange={(e) => setMotherName(e.target.value.toLocaleUpperCase())} />
+                <Input
+                  value={motherName}
+                  onChange={(e) => setMotherName(e.target.value.toLocaleUpperCase())}
+                />
               </Field>
               <Field label="Mother's Contact">
                 <Input
@@ -636,7 +657,10 @@ function EnrollPage() {
               />
             </Field>
             <Field label="Address *">
-              <Textarea value={address} onChange={(e) => setAddress(e.target.value.toLocaleUpperCase())} />
+              <Textarea
+                value={address}
+                onChange={(e) => setAddress(e.target.value.toLocaleUpperCase())}
+              />
             </Field>
             <Field label="City *">
               <RadioGroup
@@ -800,12 +824,19 @@ function EnrollPage() {
           {/* Other Details */}
           <SectionCard title="Other Details">
             <Field label="Allergies & Medications">
-              <Textarea value={allergies} onChange={(e) => setAllergies(e.target.value.toLocaleUpperCase())} />
+              <Textarea
+                value={allergies}
+                onChange={(e) => setAllergies(e.target.value.toLocaleUpperCase())}
+              />
             </Field>
             <Field label="Mode of Payment *">
               <RadioGroup
                 value={paymentMode}
-                onValueChange={(v) => setPaymentMode(v as "CASH" | "ONLINE")}
+                onValueChange={(v) => {
+                  const next = v as "CASH" | "ONLINE";
+                  setPaymentMode(next);
+                  if (next === "CASH") setTransactionId("");
+                }}
                 className="flex gap-6"
               >
                 <Radio v="CASH" current={paymentMode}>
@@ -816,8 +847,21 @@ function EnrollPage() {
                 </Radio>
               </RadioGroup>
             </Field>
+            {paymentMode === "ONLINE" && (
+              <Field label="Transaction ID *">
+                <Input
+                  required
+                  value={transactionId}
+                  onChange={(e) => setTransactionId(e.target.value.toLocaleUpperCase())}
+                  placeholder="Enter online payment transaction ID"
+                />
+              </Field>
+            )}
             <Field label="Remarks">
-              <Textarea value={remarks} onChange={(e) => setRemarks(e.target.value.toLocaleUpperCase())} />
+              <Textarea
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value.toLocaleUpperCase())}
+              />
             </Field>
           </SectionCard>
 

@@ -26,7 +26,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Loader2, KeyRound, Trash2, Pencil } from "lucide-react";
+import { Plus, Loader2, KeyRound, Trash2, Pencil, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -53,6 +53,7 @@ function AdminsPage() {
   const [editTarget, setEditTarget] = useState<AdminRow | null>(null);
   const [resetTarget, setResetTarget] = useState<AdminRow | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [viewPasswordTarget, setViewPasswordTarget] = useState<AdminRow | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -169,12 +170,8 @@ function AdminsPage() {
                         <KeyRound className="h-3 w-3 mr-1" /> Reset password
                       </Button>
 
-                      <Button
-                        size="sm"
-                        variant={r.is_active ? "secondary" : "outline"}
-                        onClick={() => toggleActive(r)}
-                      >
-                        {r.is_active ? "Disable" : "Enable"}
+                      <Button size="sm" variant="outline" onClick={() => setViewPasswordTarget(r)}>
+                        <KeyRound className="h-3 w-3 mr-1" /> View Password
                       </Button>
 
                       {/* NEW: Delete button */}
@@ -228,6 +225,7 @@ function AdminsPage() {
         onSaved={() => setReloadTick((x) => x + 1)}
       />
       <ResetPasswordDialog target={resetTarget} onClose={() => setResetTarget(null)} />
+      <ViewPasswordDialog target={viewPasswordTarget} onClose={() => setViewPasswordTarget(null)} />
     </AppShell>
   );
 }
@@ -464,7 +462,103 @@ function ResetPasswordDialog({
   );
 }
 
-// ─── Table helpers — unchanged ────────────────────────────────────────────────
+function ViewPasswordDialog({ target, onClose }: { target: AdminRow | null; onClose: () => void }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setShowPassword(false);
+    setPassword(null);
+    if (!target) return;
+
+    let active = true;
+    async function loadPassword() {
+      setBusy(true);
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const r = await fetch("/api/admin/view-password", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ adminId: target.admin_id }),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || "Failed");
+        if (active) setPassword(d.password || null);
+      } catch (err) {
+        toast.error((err as Error).message);
+      } finally {
+        if (active) setBusy(false);
+      }
+    }
+
+    loadPassword();
+    return () => {
+      active = false;
+    };
+  }, [target]);
+
+  return (
+    <Dialog
+      open={!!target}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>View Password — {target?.admin_id}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Admin ID</Label>
+            <Input disabled value={target?.admin_id || ""} />
+          </div>
+          <div className="space-y-2">
+            <Label>Full Name</Label>
+            <Input disabled value={target?.full_name || ""} />
+          </div>
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input disabled value={target?.email || ""} />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Password</Label>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={!password}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+            <Input
+              disabled
+              type={showPassword ? "text" : "password"}
+              value={busy ? "Loading..." : password || ""}
+              placeholder="Password is not stored for this admin"
+            />
+            {!busy && !password && (
+              <p className="text-xs text-muted-foreground">
+                Reset this admin's password once, then View Password will show the current issued
+                password here.
+              </p>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Table helpers ────────────────────────────────────────────────────────────
 
 const Th = ({ children }: { children: React.ReactNode }) => (
   <th className="text-left text-xs font-medium px-3 py-2">{children}</th>

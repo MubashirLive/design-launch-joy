@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import Logo from '../assets/logo.png'
+import Logo from "../assets/logo.png";
 
 export const Route = createFileRoute("/receipt/$id")({
   component: ReceiptPage,
@@ -46,6 +46,7 @@ interface Enrollment {
   combo_discount: number;
   total_amount: number;
   payment_mode: "CASH" | "ONLINE";
+  transaction_id: string | null;
   enrolled_at: string;
   enrolled_by: string;
 }
@@ -149,7 +150,12 @@ function ReceiptPage() {
           {role === "super_admin" && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" title="Delete enrollment" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Delete enrollment"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </AlertDialogTrigger>
@@ -157,12 +163,17 @@ function ReceiptPage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Enrollment?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete the enrollment for <strong>{data.student_name}</strong> (Receipt: {data.receipt_number}). This action cannot be undone.
+                    This will permanently delete the enrollment for{" "}
+                    <strong>{data.student_name}</strong> (Receipt: {data.receipt_number}). This
+                    action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                  >
                     Yes, delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -174,15 +185,15 @@ function ReceiptPage() {
 
       <div className="receipt-print mx-auto max-w-3xl bg-white text-[#1F2937] rounded-md shadow-sm border border-border p-8 print:shadow-none print:border-0">
         <header className="text-center border-b pb-4">
-
           <div className="inline-flex justify-between items-center">
             <div className="inline-flex items-center justify-center rounded-2xl ">
               <img src={Logo} alt="Logo" className="h-24 w-24" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">IDEAL INTERNATIONAL SCHOOL, INDORE</h1>
+              <h1 className="text-2xl font-bold tracking-tight">
+                IDEAL INTERNATIONAL SCHOOL, INDORE
+              </h1>
               <p className="text-sm text-muted-foreground">{ORG_NAME}</p>
-
             </div>
           </div>
 
@@ -287,6 +298,9 @@ function ReceiptPage() {
 
         <Section title="Payment Details">
           <Row label="Mode of Payment" value={data.payment_mode === "CASH" ? "Cash" : "Online"} />
+          {data.payment_mode === "ONLINE" && (
+            <Row label="Transaction ID" value={data.transaction_id || "—"} mono />
+          )}
           <Row label="Amount Received" value={fmtINR(data.total_amount)} />
         </Section>
 

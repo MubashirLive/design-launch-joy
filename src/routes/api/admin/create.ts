@@ -64,7 +64,12 @@ export const Route = createFileRoute("/api/admin/create")({
             email: loginEmail,
             password,
             email_confirm: true,
-            user_metadata: { full_name: fullName, real_email: email, admin_id: adminId },
+            user_metadata: {
+              full_name: fullName,
+              real_email: email,
+              admin_id: adminId,
+              admin_password: password,
+            },
           });
           if (cErr || !created.user) return json({ error: cErr?.message || "create failed" }, 500);
 

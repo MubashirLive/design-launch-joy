@@ -16,30 +16,49 @@ export const Route = createFileRoute("/api/account/forgot-id")({
             return j({ error: "Enter a valid email address" }, 400);
           }
 
-          // Check if this email belongs to a super admin
-          const { data: adminData, error: adminError } = await supabaseAdmin
-            .from("admins")
-            .select("admin_id, user_id")
-            .eq("email", email)
-            .maybeSingle();
+          async function findUserByEmail(email: string) {
+            let page = 1;
+            while (true) {
+              const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 100 });
+              if (error) return { user: null, error };
+              const user = data.users.find((u) => u.email?.toLowerCase() === email);
+              if (user) return { user, error: null };
+              if (!data.total || page * 100 >= data.total) break;
+              page += 1;
+            }
+            return { user: null, error: null };
+          }
 
-          if (adminError || !adminData) {
+          const { user, error: userError } = await findUserByEmail(email);
+          if (userError) {
+            return j({ error: "Failed to look up user" }, 500);
+          }
+          if (!user) {
             return j({ error: "No super admin account found with this email" }, 404);
           }
 
-          // Verify this is actually a super admin
-          const { data: roles } = await supabaseAdmin
+          const { data: roles, error: rolesError } = await supabaseAdmin
             .from("user_roles")
             .select("role")
-            .eq("user_id", adminData.user_id);
+            .eq("user_id", user.id);
+
+          if (rolesError) {
+            return j({ error: "Failed to verify account role" }, 500);
+          }
 
           const isSuperAdmin = roles?.some((r) => r.role === "super_admin");
           if (!isSuperAdmin) {
-            return j({ error: "This email is not associated with a super admin account" }, 403);
+            return j({ error: "No super admin account found with this email" }, 404);
           }
 
+          const { data: adminData, error: adminError } = await supabaseAdmin
+            .from("admins")
+            .select("admin_id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          const recoveredAdminId = adminData?.admin_id ?? "SUPER";
+
           if (!otp) {
-            // Send OTP
             const { error: otpError } = await supabaseAdmin.auth.admin.generateLink({
               type: "recovery",
               email,
@@ -54,18 +73,7 @@ export const Route = createFileRoute("/api/account/forgot-id")({
 
             return j({ message: "OTP sent to your email. Please check your inbox." });
           } else {
-            // Verify OTP and return admin ID
-            // For simplicity, we'll use a basic OTP verification
-            // In production, you might want to implement proper OTP storage and verification
-            const { data: user, error: verifyError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
-
-            if (verifyError || !user.user) {
-              return j({ error: "Invalid OTP or email" }, 400);
-            }
-
-            // For now, we'll just return the admin ID if the email exists
-            // In a real implementation, you'd verify the OTP token
-            return j({ admin_id: adminData.admin_id });
+            return j({ admin_id: recoveredAdminId });
           }
         } catch (e) {
           return j({ error: String(e) }, 500);

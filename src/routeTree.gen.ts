@@ -19,6 +19,7 @@ import { Route as AdminsRouteImport } from './routes/admins'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReceiptIdRouteImport } from './routes/receipt.$id'
 import { Route as ApiPublicBootstrapRouteImport } from './routes/api/public/bootstrap'
+import { Route as ApiAdminViewPasswordRouteImport } from './routes/api/admin/view-password'
 import { Route as ApiAdminResetPasswordRouteImport } from './routes/api/admin/reset-password'
 import { Route as ApiAdminCreateRouteImport } from './routes/api/admin/create'
 import { Route as ApiAccountForgotIdRouteImport } from './routes/api/account/forgot-id'
@@ -74,6 +75,11 @@ const ApiPublicBootstrapRoute = ApiPublicBootstrapRouteImport.update({
   path: '/api/public/bootstrap',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminViewPasswordRoute = ApiAdminViewPasswordRouteImport.update({
+  id: '/api/admin/view-password',
+  path: '/api/admin/view-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminResetPasswordRoute = ApiAdminResetPasswordRouteImport.update({
   id: '/api/admin/reset-password',
   path: '/api/admin/reset-password',
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/api/account/forgot-id': typeof ApiAccountForgotIdRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
+  '/api/admin/view-password': typeof ApiAdminViewPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
 }
 export interface FileRoutesByTo {
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/api/account/forgot-id': typeof ApiAccountForgotIdRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
+  '/api/admin/view-password': typeof ApiAdminViewPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
 }
 export interface FileRoutesById {
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/api/account/forgot-id': typeof ApiAccountForgotIdRoute
   '/api/admin/create': typeof ApiAdminCreateRoute
   '/api/admin/reset-password': typeof ApiAdminResetPasswordRoute
+  '/api/admin/view-password': typeof ApiAdminViewPasswordRoute
   '/api/public/bootstrap': typeof ApiPublicBootstrapRoute
 }
 export interface FileRouteTypes {
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/api/account/forgot-id'
     | '/api/admin/create'
     | '/api/admin/reset-password'
+    | '/api/admin/view-password'
     | '/api/public/bootstrap'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/api/account/forgot-id'
     | '/api/admin/create'
     | '/api/admin/reset-password'
+    | '/api/admin/view-password'
     | '/api/public/bootstrap'
   id:
     | '__root__'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/api/account/forgot-id'
     | '/api/admin/create'
     | '/api/admin/reset-password'
+    | '/api/admin/view-password'
     | '/api/public/bootstrap'
   fileRoutesById: FileRoutesById
 }
@@ -209,6 +221,7 @@ export interface RootRouteChildren {
   ApiAccountForgotIdRoute: typeof ApiAccountForgotIdRoute
   ApiAdminCreateRoute: typeof ApiAdminCreateRoute
   ApiAdminResetPasswordRoute: typeof ApiAdminResetPasswordRoute
+  ApiAdminViewPasswordRoute: typeof ApiAdminViewPasswordRoute
   ApiPublicBootstrapRoute: typeof ApiPublicBootstrapRoute
 }
 
@@ -284,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBootstrapRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/view-password': {
+      id: '/api/admin/view-password'
+      path: '/api/admin/view-password'
+      fullPath: '/api/admin/view-password'
+      preLoaderRoute: typeof ApiAdminViewPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/reset-password': {
       id: '/api/admin/reset-password'
       path: '/api/admin/reset-password'
@@ -329,6 +349,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAccountForgotIdRoute: ApiAccountForgotIdRoute,
   ApiAdminCreateRoute: ApiAdminCreateRoute,
   ApiAdminResetPasswordRoute: ApiAdminResetPasswordRoute,
+  ApiAdminViewPasswordRoute: ApiAdminViewPasswordRoute,
   ApiPublicBootstrapRoute: ApiPublicBootstrapRoute,
 }
 export const routeTree = rootRouteImport
