@@ -137,22 +137,23 @@ export function calcAge(dob: string): number {
 }
 
 export function buildRegistrationId(args: {
-  studentFirstName: string;
-  shift: Shift;
+  firstName: string;
   adminFormCount: number; // count INCLUDING this submission
   globalCount: number;
 }): string {
-  const raw = (args.studentFirstName || "")
+  const raw = (args.firstName || "")
     .trim()
     .replace(/[^A-Za-z]/g, "")
     .toUpperCase()
     .slice(0, 3);
   const padded = (raw + "___").slice(0, 3);
+  const monthCode = new Date()
+    .toLocaleString("en-US", { month: "short" })
+    .charAt(0)
+    .toUpperCase();
   const dd = String(new Date().getDate()).padStart(2, "0");
-  const shiftCode = args.shift === "MORNING" ? "M" : "E";
-  const ac = String(args.adminFormCount).padStart(2, "0");
-  const gc = String(args.globalCount).padStart(3, "0");
-  return `${padded}${dd}M${shiftCode}${ac}-${gc}`;
+  const ac = String(args.adminFormCount).padStart(3, "0");
+  return `${padded}${ac}${monthCode}${dd}-${args.globalCount}`;
 }
 
 export function buildReceiptNumber(seq: number): string {

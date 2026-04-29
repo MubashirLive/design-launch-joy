@@ -38,7 +38,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { fmtINR } from "@/lib/camp";
+import { CLASSES, EVENING_ACTIVITIES, MORNING_ACTIVITIES, fmtINR } from "@/lib/camp";
 
 export const Route = createFileRoute("/super")({
   component: SuperHome,
@@ -57,6 +57,8 @@ interface AdminRow {
 interface Enrollment {
   id: string;
   student_name: string;
+  age: number;
+  gender: string;
   class: string;
   shift: "MORNING" | "EVENING";
   payment_mode: "CASH" | "ONLINE";
@@ -65,7 +67,11 @@ interface Enrollment {
   enrolled_at: string;
   enrolled_by: string;
   receipt_number: string | null;
+  registration_number: number | null;
   registration_id: string | null;
+  activities: { activity_name: string; fee: number }[];
+  mess_opted: boolean;
+  transport_opted: boolean;
   photo_url: string | null;
   marksheet_url: string | null;
   admin_name?: string;
@@ -90,6 +96,15 @@ function fmtDateTime(iso: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+const ACTIVITY_OPTIONS = Array.from(
+  new Set([...MORNING_ACTIVITIES, ...EVENING_ACTIVITIES].map((a) => a.name)),
+);
+const AGE_OPTIONS = Array.from({ length: 19 }, (_, i) => i + 2);
+
+function hasActivity(enrollment: Enrollment, activity: string) {
+  return enrollment.activities?.some((a) => a.activity_name === activity) ?? false;
 }
 
 function toCSV(rows: Record<string, unknown>[]): string {
@@ -140,6 +155,12 @@ function SuperHome() {
   const [filterAdmin, setFilterAdmin] = useState("all");
   const [filterPayment, setFilterPayment] = useState<"all" | "CASH" | "ONLINE">("all");
   const [filterShift, setFilterShift] = useState<"all" | "MORNING" | "EVENING">("all");
+  const [filterGender, setFilterGender] = useState("all");
+  const [filterAge, setFilterAge] = useState("all");
+  const [filterActivity, setFilterActivity] = useState("all");
+  const [filterMess, setFilterMess] = useState("all");
+  const [filterTransport, setFilterTransport] = useState("all");
+  const [filterClass, setFilterClass] = useState("all");
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
 
@@ -159,13 +180,20 @@ function SuperHome() {
       let query = supabase
         .from("enrollments")
         .select(
-          "id,student_name,class,shift,payment_mode,transaction_id,total_amount,enrolled_at,enrolled_by,receipt_number,registration_id,photo_url,marksheet_url",
+          "id,student_name,age,gender,class,shift,payment_mode,transaction_id,total_amount,enrolled_at,enrolled_by,receipt_number,registration_number,registration_id,activities,mess_opted,transport_opted,photo_url,marksheet_url",
         )
         .order("enrolled_at", { ascending: false })
         .limit(200);
 
       if (filterPayment !== "all") query = query.eq("payment_mode", filterPayment);
       if (filterShift !== "all") query = query.eq("shift", filterShift);
+      if (filterGender !== "all") query = query.eq("gender", filterGender);
+      if (filterAge !== "all") query = query.eq("age", Number(filterAge));
+      if (filterMess !== "all") query = query.eq("mess_opted", filterMess === "mess");
+      if (filterTransport !== "all") {
+        query = query.eq("transport_opted", filterTransport === "transport");
+      }
+      if (filterClass !== "all") query = query.eq("class", filterClass);
       if (filterFrom) query = query.gte("enrolled_at", filterFrom);
       if (filterTo) {
         const toEnd = new Date(filterTo);
@@ -185,13 +213,29 @@ function SuperHome() {
         const adm = admins.find((a) => a.id === filterAdmin);
         rows = rows.filter((r) => r.enrolled_by === adm?.user_id);
       }
+      if (filterActivity !== "all") {
+        rows = rows.filter((r) => hasActivity(r, filterActivity));
+      }
 
       setEnrollments(rows);
     } catch (err) {
       toast.error((err as Error).message);
     }
     setEnrollmentsLoading(false);
-  }, [admins, filterAdmin, filterPayment, filterShift, filterFrom, filterTo]);
+  }, [
+    admins,
+    filterAdmin,
+    filterPayment,
+    filterShift,
+    filterGender,
+    filterAge,
+    filterActivity,
+    filterMess,
+    filterTransport,
+    filterClass,
+    filterFrom,
+    filterTo,
+  ]);
 
   useEffect(() => {
     if (role === "super_admin") fetchEnrollments();
@@ -207,6 +251,13 @@ function SuperHome() {
         .order("enrolled_at", { ascending: false });
       if (filterPayment !== "all") query = query.eq("payment_mode", filterPayment);
       if (filterShift !== "all") query = query.eq("shift", filterShift);
+      if (filterGender !== "all") query = query.eq("gender", filterGender);
+      if (filterAge !== "all") query = query.eq("age", Number(filterAge));
+      if (filterMess !== "all") query = query.eq("mess_opted", filterMess === "mess");
+      if (filterTransport !== "all") {
+        query = query.eq("transport_opted", filterTransport === "transport");
+      }
+      if (filterClass !== "all") query = query.eq("class", filterClass);
       if (filterFrom) query = query.gte("enrolled_at", filterFrom);
       if (filterTo) {
         const toEnd = new Date(filterTo);
@@ -220,6 +271,7 @@ function SuperHome() {
       let rows = (data ?? []).map((e) => {
         const adm = adminMap[e.enrolled_by];
         return {
+          Registration_No: e.registration_number ?? "",
           Registration_ID: e.registration_id ?? "",
           Receipt_Number: e.receipt_number ?? "",
           Student_Name: e.student_name,
@@ -262,6 +314,9 @@ function SuperHome() {
         const adm = admins.find((a) => a.id === filterAdmin);
         rows = rows.filter((r) => r.Enrolled_By === adm?.full_name);
       }
+      if (filterActivity !== "all") {
+        rows = rows.filter((r) => String(r.Activities).includes(`"activity_name":"${filterActivity}"`));
+      }
 
       downloadCSV(`enrollments_${new Date().toISOString().split("T")[0]}.csv`, toCSV(rows));
       toast.success(`Exported ${rows.length} records`);
@@ -275,6 +330,12 @@ function SuperHome() {
     setFilterAdmin("all");
     setFilterPayment("all");
     setFilterShift("all");
+    setFilterGender("all");
+    setFilterAge("all");
+    setFilterActivity("all");
+    setFilterMess("all");
+    setFilterTransport("all");
+    setFilterClass("all");
     setFilterFrom("");
     setFilterTo("");
   }
@@ -297,6 +358,12 @@ function SuperHome() {
     filterAdmin !== "all" ||
     filterPayment !== "all" ||
     filterShift !== "all" ||
+    filterGender !== "all" ||
+    filterAge !== "all" ||
+    filterActivity !== "all" ||
+    filterMess !== "all" ||
+    filterTransport !== "all" ||
+    filterClass !== "all" ||
     filterFrom !== "" ||
     filterTo !== "";
 
@@ -362,7 +429,7 @@ function SuperHome() {
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
               <Select value={filterAdmin} onValueChange={setFilterAdmin}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="All Admins" />
@@ -396,6 +463,81 @@ function SuperHome() {
                   <SelectItem value="all">All Shifts</SelectItem>
                   <SelectItem value="MORNING">Morning</SelectItem>
                   <SelectItem value="EVENING">Evening</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filterGender} onValueChange={setFilterGender}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="All Genders" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Genders</SelectItem>
+                  <SelectItem value="Girl">Girls</SelectItem>
+                  <SelectItem value="Boy">Boys</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filterAge} onValueChange={setFilterAge}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="All Ages" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Ages</SelectItem>
+                  {AGE_OPTIONS.map((age) => (
+                    <SelectItem key={age} value={String(age)}>
+                      {age} years
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={filterActivity} onValueChange={setFilterActivity}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="All Activities" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Activities</SelectItem>
+                  {ACTIVITY_OPTIONS.map((activity) => (
+                    <SelectItem key={activity} value={activity}>
+                      {activity}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={filterMess} onValueChange={setFilterMess}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Mess" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Mess & Non Mess</SelectItem>
+                  <SelectItem value="mess">Mess</SelectItem>
+                  <SelectItem value="non_mess">Non Mess</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filterTransport} onValueChange={setFilterTransport}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Transport" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Transport & Non Transport</SelectItem>
+                  <SelectItem value="transport">Transport</SelectItem>
+                  <SelectItem value="non_transport">Non Transport</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filterClass} onValueChange={setFilterClass}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="All Classes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {CLASSES.map((klass) => (
+                    <SelectItem key={klass} value={klass}>
+                      {klass}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
@@ -438,6 +580,36 @@ function SuperHome() {
                 {filterShift !== "all" && (
                   <Chip label={`Shift: ${filterShift}`} onRemove={() => setFilterShift("all")} />
                 )}
+                {filterGender !== "all" && (
+                  <Chip
+                    label={`Gender: ${filterGender}`}
+                    onRemove={() => setFilterGender("all")}
+                  />
+                )}
+                {filterAge !== "all" && (
+                  <Chip label={`Age: ${filterAge}`} onRemove={() => setFilterAge("all")} />
+                )}
+                {filterActivity !== "all" && (
+                  <Chip
+                    label={`Activity: ${filterActivity}`}
+                    onRemove={() => setFilterActivity("all")}
+                  />
+                )}
+                {filterMess !== "all" && (
+                  <Chip
+                    label={filterMess === "mess" ? "Mess" : "Non Mess"}
+                    onRemove={() => setFilterMess("all")}
+                  />
+                )}
+                {filterTransport !== "all" && (
+                  <Chip
+                    label={filterTransport === "transport" ? "Transport" : "Non Transport"}
+                    onRemove={() => setFilterTransport("all")}
+                  />
+                )}
+                {filterClass !== "all" && (
+                  <Chip label={`Class: ${filterClass}`} onRemove={() => setFilterClass("all")} />
+                )}
                 {filterFrom && (
                   <Chip label={`From: ${fmtDate(filterFrom)}`} onRemove={() => setFilterFrom("")} />
                 )}
@@ -464,20 +636,32 @@ function SuperHome() {
                   Showing {enrollments.length} record{enrollments.length !== 1 ? "s" : ""}
                   {hasFilters ? " (filtered)" : ""}
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                <div className="overflow-hidden">
+                  <table className="w-full table-fixed text-xs">
+                    <colgroup>
+                      <col className="w-[15%]" />
+                      <col className="w-[14%]" />
+                      <col className="w-[5%]" />
+                      <col className="w-[8%]" />
+                      <col className="w-[8%]" />
+                      <col className="w-[9%]" />
+                      <col className="w-[12%]" />
+                      <col className="w-[8%]" />
+                      <col className="w-[13%]" />
+                      <col className="w-[8%]" />
+                    </colgroup>
                     <thead>
                       <tr className="border-b bg-muted/40 text-left text-xs font-medium text-muted-foreground">
-                        <th className="px-4 py-2 whitespace-nowrap">Reg. ID</th>
-                        <th className="px-4 py-2 whitespace-nowrap">Student</th>
-                        <th className="px-4 py-2">Class</th>
-                        <th className="px-4 py-2">Shift</th>
-                        <th className="px-4 py-2">Payment</th>
-                        <th className="px-4 py-2 text-right whitespace-nowrap">Amount</th>
-                        <th className="px-4 py-2 whitespace-nowrap">Enrolled By</th>
-                        <th className="px-4 py-2 whitespace-nowrap">Date</th>
-                        <th className="px-4 py-2 text-center">Actions</th>
-                        <th className="px-4 py-2 text-center">Docs</th>
+                        <th className="px-2 py-2">Registration No.</th>
+                        <th className="px-2 py-2">Student</th>
+                        <th className="px-2 py-2">Class</th>
+                        <th className="px-2 py-2">Shift</th>
+                        <th className="px-2 py-2">Payment</th>
+                        <th className="px-2 py-2 text-right">Amount</th>
+                        <th className="px-2 py-2">Enrolled By</th>
+                        <th className="px-2 py-2">Date</th>
+                        <th className="px-2 py-2 text-center">Actions</th>
+                        <th className="px-2 py-2 text-center">Docs</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -486,14 +670,14 @@ function SuperHome() {
                           key={e.id}
                           className="border-b last:border-0 hover:bg-muted/30 transition-colors"
                         >
-                          <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
-                            {e.registration_id ?? "—"}
+                          <td className="break-all px-2 py-2.5 font-mono text-[11px] text-muted-foreground">
+                            {e.registration_number ?? "-"}
                           </td>
-                          <td className="px-4 py-2.5 font-medium whitespace-nowrap">
+                          <td className="px-2 py-2.5 font-medium">
                             {e.student_name}
                           </td>
-                          <td className="px-4 py-2.5">{e.class}</td>
-                          <td className="px-4 py-2.5">
+                          <td className="px-2 py-2.5">{e.class}</td>
+                          <td className="px-2 py-2.5">
                             <Badge
                               variant="outline"
                               className={`text-[11px] ${e.shift === "MORNING" ? "border-amber-400 text-amber-700 bg-amber-50" : "border-indigo-400 text-indigo-700 bg-indigo-50"}`}
@@ -501,7 +685,7 @@ function SuperHome() {
                               {e.shift === "MORNING" ? "🌅 Morning" : "🌆 Evening"}
                             </Badge>
                           </td>
-                          <td className="px-4 py-2.5">
+                          <td className="px-2 py-2.5">
                             <Badge
                               variant="outline"
                               className={`text-[11px] ${e.payment_mode === "CASH" ? "border-green-400 text-green-700 bg-green-50" : "border-blue-400 text-blue-700 bg-blue-50"}`}
@@ -509,10 +693,10 @@ function SuperHome() {
                               {e.payment_mode === "CASH" ? "💵 Cash" : "🔁 Online"}
                             </Badge>
                           </td>
-                          <td className="px-4 py-2.5 text-right font-semibold tabular-nums">
+                          <td className="px-2 py-2.5 text-right font-semibold tabular-nums">
                             {fmtINR(e.total_amount)}
                           </td>
-                          <td className="px-4 py-2.5 text-xs whitespace-nowrap">
+                          <td className="px-2 py-2.5 text-xs">
                             <span className="font-medium">{e.admin_name}</span>
                             {e.admin_id_label && e.admin_id_label !== "—" && (
                               <span className="block text-[10px] text-muted-foreground font-mono">
@@ -520,10 +704,10 @@ function SuperHome() {
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                          <td className="px-2 py-2.5 text-xs text-muted-foreground">
                             {fmtDate(e.enrolled_at)}
                           </td>
-                          <td className="px-4 py-2.5 text-center">
+                          <td className="px-2 py-2.5 text-center">
                             <div className="flex items-center justify-center gap-1.5">
                               <Link
                                 to="/enroll"
@@ -582,7 +766,7 @@ function SuperHome() {
                               </AlertDialog>
                             </div>
                           </td>
-                          <td className="px-4 py-2.5 text-center">
+                          <td className="px-2 py-2.5 text-center">
                             <div className="flex items-center justify-center gap-1.5">
                               {e.photo_url ? (
                                 <a

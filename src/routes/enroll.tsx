@@ -375,6 +375,8 @@ function EnrollPage() {
     }
     if (!paymentMode) return "Payment mode required";
     if (paymentMode === "ONLINE" && !transactionId.trim()) return "Transaction ID is required";
+    if (!photoFile && !existingPhotoUrl) return "Student photo is required";
+    if (!marksheetFile && !existingMarksheetUrl) return "Last year's marksheet is required";
     return null;
   }
 
@@ -479,8 +481,10 @@ function EnrollPage() {
         adminFormCount = (count || 0) + 1;
       }
       const regId = buildRegistrationId({
-        studentFirstName: studentName.trim().split(" ")[0],
-        shift,
+        firstName:
+          adminProfile?.full_name?.trim().split(/\s+/)[0] ||
+          String(session.user.user_metadata?.full_name || "").trim().split(/\s+/)[0] ||
+          studentName.trim().split(/\s+/)[0],
         adminFormCount,
         globalCount: regNum as number,
       });
@@ -689,11 +693,11 @@ function EnrollPage() {
           {/* ── NEW: Documents Upload ─────────────────────────────────────── */}
           <SectionCard title="Documents">
             <p className="text-xs text-muted-foreground -mt-1">
-              Both fields are optional but recommended for record-keeping.
+              Both fields are required for enrollment records.
             </p>
 
             <FileUploadField
-              label="Student Photo"
+              label="Student Photo *"
               accept="image/jpeg,image/png,image/webp"
               hint="Passport-size photo · JPG / PNG / WEBP · Max 5 MB"
               icon={<ImageIcon className="h-8 w-8" />}
@@ -705,7 +709,7 @@ function EnrollPage() {
             />
 
             <FileUploadField
-              label="Last Year's Marksheet"
+              label="Last Year's Marksheet *"
               accept="application/pdf,image/jpeg,image/png"
               hint="PDF or image of previous year's report card · Max 5 MB"
               icon={<FileText className="h-8 w-8" />}
