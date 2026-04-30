@@ -14,6 +14,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as EnrollRouteImport } from './routes/enroll'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AttachmentRouteImport } from './routes/attachment'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AdminsRouteImport } from './routes/admins'
 import { Route as IndexRouteImport } from './routes/index'
@@ -47,6 +48,11 @@ const EnrollRoute = EnrollRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AttachmentRoute = AttachmentRouteImport.update({
+  id: '/attachment',
+  path: '/attachment',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
+  '/attachment': typeof AttachmentRoute
   '/dashboard': typeof DashboardRoute
   '/enroll': typeof EnrollRoute
   '/login': typeof LoginRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
+  '/attachment': typeof AttachmentRoute
   '/dashboard': typeof DashboardRoute
   '/enroll': typeof EnrollRoute
   '/login': typeof LoginRoute
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admins': typeof AdminsRoute
   '/analytics': typeof AnalyticsRoute
+  '/attachment': typeof AttachmentRoute
   '/dashboard': typeof DashboardRoute
   '/enroll': typeof EnrollRoute
   '/login': typeof LoginRoute
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admins'
     | '/analytics'
+    | '/attachment'
     | '/dashboard'
     | '/enroll'
     | '/login'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admins'
     | '/analytics'
+    | '/attachment'
     | '/dashboard'
     | '/enroll'
     | '/login'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admins'
     | '/analytics'
+    | '/attachment'
     | '/dashboard'
     | '/enroll'
     | '/login'
@@ -199,6 +211,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminsRoute: typeof AdminsRoute
   AnalyticsRoute: typeof AnalyticsRoute
+  AttachmentRoute: typeof AttachmentRoute
   DashboardRoute: typeof DashboardRoute
   EnrollRoute: typeof EnrollRoute
   LoginRoute: typeof LoginRoute
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/attachment': {
+      id: '/attachment'
+      path: '/attachment'
+      fullPath: '/attachment'
+      preLoaderRoute: typeof AttachmentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/analytics': {
@@ -319,6 +339,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminsRoute: AdminsRoute,
   AnalyticsRoute: AnalyticsRoute,
+  AttachmentRoute: AttachmentRoute,
   DashboardRoute: DashboardRoute,
   EnrollRoute: EnrollRoute,
   LoginRoute: LoginRoute,

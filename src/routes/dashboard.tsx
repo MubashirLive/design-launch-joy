@@ -668,28 +668,36 @@ function AdminHome() {
                         <td className="px-2 py-2.5 text-center">
                           <div className="flex items-center justify-center gap-1.5">
                             {e.photo_url ? (
-                              <a
-                                href={e.photo_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <Link
+                                to="/attachment"
+                                search={{
+                                  url: e.photo_url,
+                                  title: `${e.student_name} Photo`,
+                                  fileName: `${e.student_name}-photo`,
+                                  kind: "photo",
+                                }}
                                 title="View photo"
                                 className="text-muted-foreground hover:text-primary"
                               >
                                 <ExternalLink className="h-3.5 w-3.5" />
-                              </a>
+                              </Link>
                             ) : (
                               <span className="text-[10px] text-muted-foreground/40">-</span>
                             )}
                             {e.marksheet_url ? (
-                              <a
-                                href={e.marksheet_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <Link
+                                to="/attachment"
+                                search={{
+                                  url: e.marksheet_url,
+                                  title: `${e.student_name} Marksheet`,
+                                  fileName: `${e.student_name}-marksheet`,
+                                  kind: "marksheet",
+                                }}
                                 title="View marksheet"
                                 className="text-muted-foreground hover:text-primary"
                               >
                                 <ExternalLink className="h-3.5 w-3.5" />
-                              </a>
+                              </Link>
                             ) : (
                               <span className="text-[10px] text-muted-foreground/40">-</span>
                             )}
