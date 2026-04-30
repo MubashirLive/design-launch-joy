@@ -65,7 +65,7 @@ export const Route = createFileRoute("/api/account/change-email")({
           const { data: otpData, error: otpError } = await userClient.auth.verifyOtp({
             email: currentEmail,
             token: otp,
-            type: "email",
+            type: "magiclink",
           });
           if (otpError || otpData.user?.id !== userId) {
             return json({ error: otpError?.message || "Invalid OTP" }, 400);
