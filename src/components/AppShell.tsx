@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, Loader2, Settings } from "lucide-react";
+import { Eye, EyeOff, LogOut, Loader2, Settings } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import Logo from '../assets/logo.png'
@@ -70,11 +70,21 @@ export function AppShell({
 }
 
 function AccountSettingsDialog() {
-  const { role, session, refreshProfile } = useAuth();
+  const { role, session, signOut } = useAuth();
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState<"password" | "email-link" | null>(null);
+  const [busy, setBusy] = useState<"password" | "email-otp" | "email-change" | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailOtp, setEmailOtp] = useState("");
+  const [emailPassword, setEmailPassword] = useState("");
+  const [confirmEmailPassword, setConfirmEmailPassword] = useState("");
+  const [showEmailPassword, setShowEmailPassword] = useState(false);
+  const [showConfirmEmailPassword, setShowConfirmEmailPassword] = useState(false);
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const navigate = useNavigate();
 
   async function updatePassword(e: React.FormEvent) {
     e.preventDefault();
@@ -100,20 +110,87 @@ function AccountSettingsDialog() {
     }
   }
 
-  async function sendEmailChangeLink() {
+  async function sendEmailChangeOtp() {
     const currentEmail = session?.user.email;
     if (!currentEmail) {
       toast.error("Current email is not available");
       return;
     }
-    setBusy("email-link");
+    const email = newEmail.trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Enter a valid new email address");
+      return;
+    }
+    if (email === currentEmail.toLowerCase()) {
+      toast.error("Enter a different email address");
+      return;
+    }
+
+    setBusy("email-otp");
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(currentEmail, {
-        redirectTo: `${window.location.origin}/change-email`,
+      const { error } = await supabase.auth.signInWithOtp({
+        email: currentEmail,
+        options: { shouldCreateUser: false },
       });
       if (error) throw error;
-      await refreshProfile();
-      toast.success("Password change link sent to your current email");
+      setEmailOtpSent(true);
+      toast.success("OTP sent to your old email");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function confirmEmailChange(e: React.FormEvent) {
+    e.preventDefault();
+    const currentEmail = session?.user.email?.toLowerCase();
+    const email = newEmail.trim().toLowerCase();
+    if (!currentEmail) {
+      toast.error("Current email is not available");
+      return;
+    }
+    if (!emailOtp.trim()) {
+      toast.error("Enter the OTP sent to your old email");
+      return;
+    }
+    if (emailPassword.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+    if (emailPassword !== confirmEmailPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setBusy("email-change");
+    try {
+      const {
+        data: { session: currentSession },
+      } = await supabase.auth.getSession();
+      if (!currentSession?.access_token) throw new Error("Please log in again");
+
+      const response = await fetch("/api/account/change-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${currentSession.access_token}`,
+        },
+        body: JSON.stringify({
+          currentEmail,
+          email,
+          otp: emailOtp.trim(),
+          password: emailPassword,
+        }),
+      });
+      const result = (await response.json()) as { ok?: boolean; error?: string };
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Unable to change email");
+      }
+
+      toast.success("Mail is changed");
+      await signOut();
+      navigate({ to: "/login" });
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -139,25 +216,59 @@ function AccountSettingsDialog() {
         <form onSubmit={updatePassword} className="space-y-3 border-b pb-4">
           <div className="space-y-1.5">
             <Label htmlFor="new-password">New password</Label>
-            <Input
-              id="new-password"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              autoComplete="new-password"
-              required
-            />
+            <div className="relative">
+              <Input
+                id="new-password"
+                type={showNewPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+                className="pr-10"
+                required
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowNewPassword((show) => !show)}
+                aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+              >
+                {showNewPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="confirm-password">Confirm password</Label>
-            <Input
-              id="confirm-password"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              autoComplete="new-password"
-              required
-            />
+            <div className="relative">
+              <Input
+                id="confirm-password"
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+                className="pr-10"
+                required
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowConfirmPassword((show) => !show)}
+                aria-label={
+                  showConfirmPassword
+                    ? "Hide confirm password"
+                    : "Show confirm password"
+                }
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
           <Button type="submit" className="w-full" disabled={!!busy}>
             {busy === "password" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -166,24 +277,118 @@ function AccountSettingsDialog() {
         </form>
 
         {role === "super_admin" && (
-          <div className="space-y-3">
+          <form onSubmit={confirmEmailChange} className="space-y-3">
             <div className="space-y-1.5">
               <Label>Login email</Label>
               <p className="rounded-md border bg-muted px-3 py-2 text-sm text-muted-foreground">
                 {session?.user.email || "No email found"}
               </p>
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="change-email-new">New mail</Label>
+              <Input
+                id="change-email-new"
+                type="email"
+                value={newEmail}
+                onChange={(e) => {
+                  setNewEmail(e.target.value);
+                  setEmailOtpSent(false);
+                }}
+                autoComplete="email"
+                required
+              />
+            </div>
             <Button
               type="button"
               variant="secondary"
               className="w-full"
-              disabled={!!busy}
-              onClick={sendEmailChangeLink}
+              disabled={!!busy || !newEmail.trim()}
+              onClick={sendEmailChangeOtp}
             >
-              {busy === "email-link" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Send Password Change Link
+              {busy === "email-otp" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Send OTP to Old Email
             </Button>
-          </div>
+            {emailOtpSent && (
+              <p className="text-xs text-muted-foreground">
+                OTP sent to {session?.user.email}. Enter it below to confirm the change.
+              </p>
+            )}
+            <div className="space-y-1.5">
+              <Label htmlFor="change-email-otp">OTP from old email</Label>
+              <Input
+                id="change-email-otp"
+                value={emailOtp}
+                onChange={(e) => setEmailOtp(e.target.value)}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="change-email-password">New password</Label>
+              <div className="relative">
+                <Input
+                  id="change-email-password"
+                  type={showEmailPassword ? "text" : "password"}
+                  value={emailPassword}
+                  onChange={(e) => setEmailPassword(e.target.value)}
+                  autoComplete="new-password"
+                  className="pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowEmailPassword((show) => !show)}
+                  aria-label={showEmailPassword ? "Hide new password" : "Show new password"}
+                >
+                  {showEmailPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="change-email-confirm-password">Confirm new password</Label>
+              <div className="relative">
+                <Input
+                  id="change-email-confirm-password"
+                  type={showConfirmEmailPassword ? "text" : "password"}
+                  value={confirmEmailPassword}
+                  onChange={(e) => setConfirmEmailPassword(e.target.value)}
+                  autoComplete="new-password"
+                  className="pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowConfirmEmailPassword((show) => !show)}
+                  aria-label={
+                    showConfirmEmailPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
+                >
+                  {showConfirmEmailPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={!!busy || !emailOtpSent || !emailOtp.trim()}
+            >
+              {busy === "email-change" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirm Mail Change
+            </Button>
+          </form>
         )}
       </DialogContent>
     </Dialog>

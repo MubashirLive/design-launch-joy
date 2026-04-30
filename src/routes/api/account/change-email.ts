@@ -30,10 +30,24 @@ export const Route = createFileRoute("/api/account/change-email")({
           if (!isSuperAdmin)
             return json({ error: "Only the Super Admin can change the login email" }, 403);
 
-          const body = (await request.json()) as { email?: string };
+          const body = (await request.json()) as {
+            currentEmail?: string;
+            email?: string;
+            otp?: string;
+            password?: string;
+          };
+          const currentEmail = (body.currentEmail || "").trim().toLowerCase();
           const email = (body.email || "").trim().toLowerCase();
+          const otp = (body.otp || "").trim();
+          const password = body.password || "";
+          if (!currentEmail || !otp) {
+            return json({ error: "Enter the OTP sent to the old email" }, 400);
+          }
           if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             return json({ error: "Enter a valid email address" }, 400);
+          }
+          if (password.length < 8) {
+            return json({ error: "Password must be at least 8 characters" }, 400);
           }
 
           const { data: currentUser, error: userError } =
@@ -44,10 +58,23 @@ export const Route = createFileRoute("/api/account/change-email")({
           if (currentUser.user.email?.toLowerCase() === email) {
             return json({ error: "Enter a different email address" }, 400);
           }
+          if (currentUser.user.email?.toLowerCase() !== currentEmail) {
+            return json({ error: "Old email does not match the signed-in account" }, 400);
+          }
+
+          const { data: otpData, error: otpError } = await userClient.auth.verifyOtp({
+            email: currentEmail,
+            token: otp,
+            type: "email",
+          });
+          if (otpError || otpData.user?.id !== userId) {
+            return json({ error: otpError?.message || "Invalid OTP" }, 400);
+          }
 
           const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
             email,
             email_confirm: true,
+            password,
           });
           if (updateError) return json({ error: updateError.message }, 400);
 
