@@ -343,7 +343,8 @@ function EnrollPage() {
         setRemarks(data.remarks || "");
         setExistingPhotoUrl(data.photo_url || null);
         setExistingMarksheetUrl(data.marksheet_url || null);
-      });
+      })
+      .finally(() => setLoadingEdit(false));
   }, [edit, navigate, role, session]);
 
   const slotColor =

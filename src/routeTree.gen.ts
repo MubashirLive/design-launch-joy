@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuperRouteImport } from './routes/super'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as EnrollRouteImport } from './routes/enroll'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -28,6 +29,11 @@ import { Route as ApiAccountChangeEmailRouteImport } from './routes/api/account/
 const SuperRoute = SuperRouteImport.update({
   id: '/super',
   path: '/super',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/enroll': typeof EnrollRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/super': typeof SuperRoute
   '/receipt/$id': typeof ReceiptIdRoute
   '/api/account/change-email': typeof ApiAccountChangeEmailRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/enroll': typeof EnrollRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/super': typeof SuperRoute
   '/receipt/$id': typeof ReceiptIdRoute
   '/api/account/change-email': typeof ApiAccountChangeEmailRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/enroll': typeof EnrollRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/super': typeof SuperRoute
   '/receipt/$id': typeof ReceiptIdRoute
   '/api/account/change-email': typeof ApiAccountChangeEmailRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/enroll'
     | '/login'
+    | '/reset-password'
     | '/super'
     | '/receipt/$id'
     | '/api/account/change-email'
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/enroll'
     | '/login'
+    | '/reset-password'
     | '/super'
     | '/receipt/$id'
     | '/api/account/change-email'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/enroll'
     | '/login'
+    | '/reset-password'
     | '/super'
     | '/receipt/$id'
     | '/api/account/change-email'
@@ -215,6 +227,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   EnrollRoute: typeof EnrollRoute
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SuperRoute: typeof SuperRoute
   ReceiptIdRoute: typeof ReceiptIdRoute
   ApiAccountChangeEmailRoute: typeof ApiAccountChangeEmailRoute
@@ -232,6 +245,13 @@ declare module '@tanstack/react-router' {
       path: '/super'
       fullPath: '/super'
       preLoaderRoute: typeof SuperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -343,6 +363,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   EnrollRoute: EnrollRoute,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SuperRoute: SuperRoute,
   ReceiptIdRoute: ReceiptIdRoute,
   ApiAccountChangeEmailRoute: ApiAccountChangeEmailRoute,

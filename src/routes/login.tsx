@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,9 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
+
+const PASSWORD_RESET_REDIRECT_URL =
+  "https://ideal-international-five.vercel.app/reset-password";
 
 function LoginPage() {
   const { signInSuperAdmin, signInAdmin, session, role, loading } = useAuth();
@@ -48,6 +52,9 @@ function LoginPage() {
   const [forgotStep, setForgotStep] = useState<"email" | "otp">("email");
   const [forgotBusy, setForgotBusy] = useState(false);
   const [recoveredId, setRecoveredId] = useState<string | null>(null);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordBusy, setForgotPasswordBusy] = useState(false);
 
   useEffect(() => {
     fetch("/api/public/bootstrap")
@@ -167,6 +174,34 @@ function LoginPage() {
     setForgotDialogOpen(false);
   }
 
+  async function sendPasswordResetLink() {
+    const email = forgotPasswordEmail.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setForgotPasswordBusy(true);
+    try {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: PASSWORD_RESET_REDIRECT_URL,
+      });
+
+      console.log("DATA:", data);
+      console.log("ERROR:", error);
+
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Reset link sent! Check your email.");
+        setForgotPasswordOpen(false);
+        setForgotPasswordEmail("");
+      }
+    } finally {
+      setForgotPasswordBusy(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-soft via-background to-background px-4">
       <div className="w-full max-w-md">
@@ -227,7 +262,7 @@ function LoginPage() {
                       Sign in as Super Admin
                     </Button>
                   </form>
-                  <div className="mt-4 flex justify-center">
+                  <div className="mt-4 flex justify-center gap-4">
                     <button
                       type="button"
                       onClick={() => setForgotDialogOpen(true)}
@@ -235,6 +270,17 @@ function LoginPage() {
                     >
                       <HelpCircle className="h-3 w-3" />
                       Forgot ID?
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForgotPasswordEmail(saEmail);
+                        setForgotPasswordOpen(true);
+                      }}
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      <HelpCircle className="h-3 w-3" />
+                      Forgot password?
                     </button>
                   </div>
                   {needsBootstrap && (
@@ -355,6 +401,41 @@ function LoginPage() {
                 </DialogFooter>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Reset Super Admin Password</DialogTitle>
+              <DialogDescription>
+                Enter your Super Admin email to receive a password reset link.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="forgot-password-email">Email Address</Label>
+                <Input
+                  id="forgot-password-email"
+                  type="email"
+                  placeholder="Enter your super admin email"
+                  value={forgotPasswordEmail}
+                  onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  onClick={sendPasswordResetLink}
+                  disabled={forgotPasswordBusy || !forgotPasswordEmail.trim()}
+                  className="w-full"
+                >
+                  {forgotPasswordBusy && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Send Reset Link
+                </Button>
+              </DialogFooter>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
