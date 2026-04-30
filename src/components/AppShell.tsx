@@ -205,7 +205,7 @@ function AccountSettingsDialog() {
           <Settings className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Account Settings</DialogTitle>
           <DialogDescription>
@@ -213,125 +213,16 @@ function AccountSettingsDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={updatePassword} className="space-y-3 border-b pb-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="new-password">New password</Label>
-            <div className="relative">
-              <Input
-                id="new-password"
-                type={showNewPassword ? "text" : "password"}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                autoComplete="new-password"
-                className="pr-10"
-                required
-              />
-              <button
-                type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowNewPassword((show) => !show)}
-                aria-label={showNewPassword ? "Hide new password" : "Show new password"}
-              >
-                {showNewPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="confirm-password">Confirm password</Label>
-            <div className="relative">
-              <Input
-                id="confirm-password"
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                autoComplete="new-password"
-                className="pr-10"
-                required
-              />
-              <button
-                type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowConfirmPassword((show) => !show)}
-                aria-label={
-                  showConfirmPassword
-                    ? "Hide confirm password"
-                    : "Show confirm password"
-                }
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </div>
-          <Button type="submit" className="w-full" disabled={!!busy}>
-            {busy === "password" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Update Password
-          </Button>
-        </form>
-
-        {role === "super_admin" && (
-          <form onSubmit={confirmEmailChange} className="space-y-3">
-            <div className="space-y-1.5">
-              <Label>Login email</Label>
-              <p className="rounded-md border bg-muted px-3 py-2 text-sm text-muted-foreground">
-                {session?.user.email || "No email found"}
-              </p>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="change-email-new">New mail</Label>
-              <Input
-                id="change-email-new"
-                type="email"
-                value={newEmail}
-                onChange={(e) => {
-                  setNewEmail(e.target.value);
-                  setEmailOtpSent(false);
-                }}
-                autoComplete="email"
-                required
-              />
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full"
-              disabled={!!busy || !newEmail.trim()}
-              onClick={sendEmailChangeOtp}
-            >
-              {busy === "email-otp" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Send OTP to Old Email
-            </Button>
-            {emailOtpSent && (
-              <p className="text-xs text-muted-foreground">
-                OTP sent to {session?.user.email}. Enter it below to confirm the change.
-              </p>
-            )}
-            <div className="space-y-1.5">
-              <Label htmlFor="change-email-otp">OTP from old email</Label>
-              <Input
-                id="change-email-otp"
-                value={emailOtp}
-                onChange={(e) => setEmailOtp(e.target.value)}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="change-email-password">New password</Label>
+        <form onSubmit={updatePassword} className="space-y-2.5 border-b pb-3">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label htmlFor="new-password">New password</Label>
               <div className="relative">
                 <Input
-                  id="change-email-password"
-                  type={showEmailPassword ? "text" : "password"}
-                  value={emailPassword}
-                  onChange={(e) => setEmailPassword(e.target.value)}
+                  id="new-password"
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
                   autoComplete="new-password"
                   className="pr-10"
                   required
@@ -339,10 +230,10 @@ function AccountSettingsDialog() {
                 <button
                   type="button"
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
-                  onClick={() => setShowEmailPassword((show) => !show)}
-                  aria-label={showEmailPassword ? "Hide new password" : "Show new password"}
+                  onClick={() => setShowNewPassword((show) => !show)}
+                  aria-label={showNewPassword ? "Hide new password" : "Show new password"}
                 >
-                  {showEmailPassword ? (
+                  {showNewPassword ? (
                     <EyeOff className="h-4 w-4" />
                   ) : (
                     <Eye className="h-4 w-4" />
@@ -350,7 +241,122 @@ function AccountSettingsDialog() {
                 </button>
               </div>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1">
+              <Label htmlFor="confirm-password">Confirm password</Label>
+              <div className="relative">
+                <Input
+                  id="confirm-password"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  className="pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowConfirmPassword((show) => !show)}
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+          <Button type="submit" size="sm" className="w-full" disabled={!!busy}>
+            {busy === "password" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Update Password
+          </Button>
+        </form>
+
+        {role === "super_admin" && (
+          <form onSubmit={confirmEmailChange} className="space-y-2.5">
+            <div className="space-y-1">
+              <Label>Login email</Label>
+              <p className="rounded-md border bg-muted px-3 py-1.5 text-sm text-muted-foreground">
+                {session?.user.email || "No email found"}
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+              <div className="space-y-1">
+                <Label htmlFor="change-email-new">New mail</Label>
+                <Input
+                  id="change-email-new"
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => {
+                    setNewEmail(e.target.value);
+                    setEmailOtpSent(false);
+                  }}
+                  autoComplete="email"
+                  required
+                />
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={!!busy || !newEmail.trim()}
+                onClick={sendEmailChangeOtp}
+              >
+                {busy === "email-otp" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Send OTP
+              </Button>
+            </div>
+            {emailOtpSent && (
+              <p className="text-xs text-muted-foreground">
+                OTP sent to {session?.user.email}. Enter it below to confirm the change.
+              </p>
+            )}
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="change-email-otp">OTP from old email</Label>
+                <Input
+                  id="change-email-otp"
+                  value={emailOtp}
+                  onChange={(e) => setEmailOtp(e.target.value)}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="change-email-password">New password</Label>
+                <div className="relative">
+                  <Input
+                    id="change-email-password"
+                    type={showEmailPassword ? "text" : "password"}
+                    value={emailPassword}
+                    onChange={(e) => setEmailPassword(e.target.value)}
+                    autoComplete="new-password"
+                    className="pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowEmailPassword((show) => !show)}
+                    aria-label={showEmailPassword ? "Hide new password" : "Show new password"}
+                  >
+                    {showEmailPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-1">
               <Label htmlFor="change-email-confirm-password">Confirm new password</Label>
               <div className="relative">
                 <Input
@@ -382,6 +388,7 @@ function AccountSettingsDialog() {
             </div>
             <Button
               type="submit"
+              size="sm"
               className="w-full"
               disabled={!!busy || !emailOtpSent || !emailOtp.trim()}
             >
