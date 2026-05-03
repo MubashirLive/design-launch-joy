@@ -532,7 +532,7 @@ function EnrollPage() {
             photo_url: photoUrl,
             marksheet_url: marksheetUrl,
             last_edited_at: new Date().toISOString(),
-            preferred_15_days: preferred15Days
+            preferred_15_days: plan !== 'FULL' ? preferred15Days : null
           })
           .eq("id", edit);
 
@@ -611,7 +611,7 @@ function EnrollPage() {
           // ── new fields ──
           photo_url: photoUrl,
           marksheet_url: marksheetUrl,
-          preferred_15_days: preferred15Days
+          preferred_15_days: plan !== 'FULL' ? preferred15Days : null
         })
         .select("id")
         .single();
