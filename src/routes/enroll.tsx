@@ -186,6 +186,7 @@ function EnrollPage() {
   const [paymentMode, setPaymentMode] = useState<"CASH" | "ONLINE" | "">("");
   const [transactionId, setTransactionId] = useState("");
   const [remarks, setRemarks] = useState("");
+  const [superAdminDiscount, setSuperAdminDiscount] = useState<number | "">("");
 
   // ── NEW: file states ──────────────────────────────────────────────────────
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -255,6 +256,16 @@ function EnrollPage() {
       }),
     [shift, selected, messOpted, transportOpted, transportFee],
   );
+  const discountLimit = fee.lines.reduce((sum, line) => {
+    if (line.isDiscount || line.label === "Transport Fee") return sum;
+    return sum + Math.max(0, line.amount);
+  }, 0);
+  const discountAmount =
+    role === "super_admin" && typeof superAdminDiscount === "number"
+      ? Math.min(superAdminDiscount, discountLimit)
+      : 0;
+  const payableTotal = Math.max(0, fee.total - discountAmount);
+  const savedDiscount = fee.combo_discount + discountAmount;
 
   const activityOptions = shift === "MORNING" ? MORNING_ACTIVITIES : EVENING_ACTIVITIES;
   const maxRows = shift === "MORNING" ? 5 : 2;
@@ -341,6 +352,18 @@ function EnrollPage() {
         setPaymentMode(data.payment_mode || "");
         setTransactionId(data.transaction_id || "");
         setRemarks(data.remarks || "");
+        const existingFee = computeFee({
+          shift: existingShift,
+          activities: existingActivities,
+          messOpted: existingShift === "MORNING" && !!data.mess_opted,
+          transportOpted: existingShift === "MORNING" && !!data.transport_opted,
+          transportFee: Number(data.transport_fee || 0),
+        });
+        const existingManualDiscount = Math.max(
+          0,
+          Number(data.combo_discount || 0) - existingFee.combo_discount,
+        );
+        setSuperAdminDiscount(existingManualDiscount || "");
         setExistingPhotoUrl(data.photo_url || null);
         setExistingMarksheetUrl(data.marksheet_url || null);
       })
@@ -446,8 +469,8 @@ function EnrollPage() {
                 ? transportFee
                 : 0,
             combo_applied: fee.combo_applied,
-            combo_discount: fee.combo_discount,
-            total_amount: fee.total,
+            combo_discount: savedDiscount,
+            total_amount: payableTotal,
             payment_mode: paymentMode as "CASH" | "ONLINE",
             transaction_id: paymentMode === "ONLINE" ? transactionId.trim() : null,
             allergies_medications: allergies || null,
@@ -523,8 +546,8 @@ function EnrollPage() {
               ? transportFee
               : 0,
           combo_applied: fee.combo_applied,
-          combo_discount: fee.combo_discount,
-          total_amount: fee.total,
+          combo_discount: savedDiscount,
+          total_amount: payableTotal,
           payment_mode: paymentMode as "CASH" | "ONLINE",
           transaction_id: paymentMode === "ONLINE" ? transactionId.trim() : null,
           allergies_medications: allergies || null,
@@ -868,6 +891,26 @@ function EnrollPage() {
                 onChange={(e) => setRemarks(e.target.value.toLocaleUpperCase())}
               />
             </Field>
+            {role === "super_admin" && (
+              <Field label="Discount">
+                <Input
+                  type="number"
+                  min={0}
+                  max={discountLimit}
+                  value={superAdminDiscount}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const amount = Number(value);
+                    setSuperAdminDiscount(
+                      value === "" || !Number.isFinite(amount)
+                        ? ""
+                        : Math.min(Math.max(0, amount), discountLimit),
+                    );
+                  }}
+                  placeholder="0"
+                />
+              </Field>
+            )}
           </SectionCard>
 
           <div className="flex justify-end gap-2 pb-24 lg:pb-0">
@@ -899,10 +942,16 @@ function EnrollPage() {
                     <span>{l.amount < 0 ? `- ${fmtINR(-l.amount)}` : fmtINR(l.amount)}</span>
                   </li>
                 ))}
+                {discountAmount > 0 && (
+                  <li className="flex justify-between text-success-foreground font-medium">
+                    <span>Discount</span>
+                    <span>- {fmtINR(discountAmount)}</span>
+                  </li>
+                )}
               </ul>
               <div className="mt-3 border-t pt-3 flex justify-between font-bold text-base">
                 <span>Total</span>
-                <span>{fmtINR(fee.total)}</span>
+                <span>{fmtINR(payableTotal)}</span>
               </div>
               {fee.combo_applied && (
                 <div className="mt-2 text-xs text-success-foreground">✓ Combo offer applied</div>

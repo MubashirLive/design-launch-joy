@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Loader2, MessageCircle, Printer, Trash2 } from "lucide-react";
-import { ORG_NAME, fmtINR } from "@/lib/camp";
+import { COMBO_DISCOUNT, ORG_NAME, fmtINR } from "@/lib/camp";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -313,11 +313,15 @@ function ReceiptPage() {
                     </tr>,
                   );
                 }
-                if (data.combo_applied) {
+                if (data.combo_discount > 0) {
                   rows.push(
                     <tr key="combo" className="border-t text-success-foreground">
                       <td className="p-1.5"></td>
-                      <td className="p-1.5">Combo Discount</td>
+                      <td className="p-1.5">
+                        {data.combo_applied && data.combo_discount === COMBO_DISCOUNT
+                          ? "Combo Discount"
+                          : "Discount"}
+                      </td>
                       <td className="p-1.5 text-right">
                         -{data.combo_discount.toLocaleString("en-IN")}
                       </td>
@@ -382,4 +386,3 @@ function Row({ label, value, mono = false }: { label: string; value: string; mon
     </div>
   );
 }
-
