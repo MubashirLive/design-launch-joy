@@ -49,8 +49,14 @@ interface Enrollment {
   total_amount: number;
   payment_mode: "CASH" | "ONLINE";
   transaction_id: string | null;
+  remarks: string | null;
   enrolled_at: string;
   enrolled_by: string;
+}
+
+function parsePlanPeriod(remarks: string | null | undefined) {
+  const match = (remarks || "").match(/^\[PLAN:\s*15_DAYS;\s*(02 May to 15 May|16 May to 30 May)\]/);
+  return match?.[1] || "";
 }
 
 function fileNamePart(value: string) {
@@ -130,8 +136,10 @@ function ReceiptPage() {
     .toLowerCase();
   const dobD = new Date(data.date_of_birth);
   const dobStr = `${String(dobD.getDate()).padStart(2, "0")}/${String(dobD.getMonth() + 1).padStart(2, "0")}/${dobD.getFullYear()}`;
-  const shiftLabel =
+  const planPeriod = parsePlanPeriod(data.remarks);
+  const shiftLabelBase =
     data.shift === "MORNING" ? "Morning (7:00 AM – 12:00 Noon)" : "Evening (5:00 PM – 7:00 PM)";
+  const shiftLabel = planPeriod ? `${shiftLabelBase} (${planPeriod})` : shiftLabelBase;
 
   const homeTo = role === "super_admin" ? "/super" : "/dashboard";
   const receiptUrl = typeof window !== "undefined" ? window.location.href : "";

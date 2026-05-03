@@ -21,13 +21,16 @@ import {
   CLASSES,
   EVENING_ACTIVITIES,
   MORNING_ACTIVITIES,
-  MESS_FEE,
   calcAge,
   computeFee,
   fmtINR,
+  getActivityFee,
+  getMessFee,
   slotBudget,
   buildRegistrationId,
   buildReceiptNumber,
+  type CampPlan,
+  type CampPlanPeriod,
   type Shift,
 } from "@/lib/camp";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +54,31 @@ async function uploadFile(file: File, bucket: string, path: string): Promise<str
   if (error) throw error;
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
+}
+
+const PLAN_REMARK_PREFIX = "[PLAN:";
+
+function planRemark(plan: CampPlan, period: CampPlanPeriod | "") {
+  return plan === "15_DAYS" && period ? `${PLAN_REMARK_PREFIX} 15_DAYS; ${period}]` : "";
+}
+
+function parsePlanFromRemarks(value: string | null | undefined): {
+  plan: CampPlan;
+  period: CampPlanPeriod | "";
+  remarks: string;
+} {
+  const raw = value || "";
+  const match = raw.match(/^\[PLAN:\s*15_DAYS;\s*(02 May to 15 May|16 May to 30 May)\]\s*/);
+  if (!match) return { plan: "FULL", period: "", remarks: raw };
+  return {
+    plan: "15_DAYS",
+    period: match[1] as CampPlanPeriod,
+    remarks: raw.slice(match[0].length),
+  };
+}
+
+function buildSavedRemarks(remarks: string, plan: CampPlan, period: CampPlanPeriod | "") {
+  return [planRemark(plan, period), remarks.trim()].filter(Boolean).join(" ") || null;
 }
 
 // ─── FileUploadField ─────────────────────────────────────────────────────────
@@ -160,6 +188,8 @@ function EnrollPage() {
   }, [edit, loading, role, session, navigate]);
 
   const [shift, setShift] = useState<Shift>("MORNING");
+  const [plan, setPlan] = useState<CampPlan>("FULL");
+  const [planPeriod, setPlanPeriod] = useState<CampPlanPeriod | "">("");
   const [studentName, setStudentName] = useState("");
   const [dob, setDob] = useState("");
   const age = useMemo(() => calcAge(dob), [dob]);
@@ -231,6 +261,10 @@ function EnrollPage() {
     setTransportAddress("");
   }, [shift]);
 
+  useEffect(() => {
+    if (plan === "FULL") setPlanPeriod("");
+  }, [plan]);
+
   const selected = act.filter(Boolean);
   const { activitiesAllowed } = slotBudget(shift, transportOpted, messOpted);
   const slotsUsed = selected.length + (messOpted && shift === "MORNING" ? 1 : 0);
@@ -249,12 +283,13 @@ function EnrollPage() {
     () =>
       computeFee({
         shift,
+        plan,
         activities: selected,
         messOpted: shift === "MORNING" && messOpted,
         transportOpted: shift === "MORNING" && transportOpted,
         transportFee: typeof transportFee === "number" ? transportFee : 0,
       }),
-    [shift, selected, messOpted, transportOpted, transportFee],
+    [shift, plan, selected, messOpted, transportOpted, transportFee],
   );
   const discountLimit = fee.lines.reduce((sum, line) => {
     if (line.isDiscount || line.label === "Transport Fee") return sum;
@@ -288,6 +323,11 @@ function EnrollPage() {
 
   function isOptionDisabled(name: string, currentIdx: number): boolean {
     return selected.some((v, idx) => v === name && idx !== currentIdx);
+  }
+
+  function chooseShift(nextShift: Shift, nextPlan: CampPlan) {
+    setPlan(nextPlan);
+    setShift(nextShift);
   }
 
   useEffect(() => {
@@ -351,9 +391,13 @@ function EnrollPage() {
         setAllergies(data.allergies_medications || "");
         setPaymentMode(data.payment_mode || "");
         setTransactionId(data.transaction_id || "");
-        setRemarks(data.remarks || "");
+        const parsedRemarks = parsePlanFromRemarks(data.remarks);
+        setPlan(parsedRemarks.plan);
+        setPlanPeriod(parsedRemarks.period);
+        setRemarks(parsedRemarks.remarks);
         const existingFee = computeFee({
           shift: existingShift,
+          plan: parsedRemarks.plan,
           activities: existingActivities,
           messOpted: existingShift === "MORNING" && !!data.mess_opted,
           transportOpted: existingShift === "MORNING" && !!data.transport_opted,
@@ -378,6 +422,7 @@ function EnrollPage() {
         : "text-success-foreground border-success";
 
   function validate(): string | null {
+    if (plan === "15_DAYS" && !planPeriod) return "15 days date range is required";
     if (studentName.trim().length < 3) return "Student name must be at least 3 characters";
     if (!dob) return "Date of birth is required";
     if (!gender) return "Gender is required";
@@ -417,8 +462,7 @@ function EnrollPage() {
     setBusy(true);
     try {
       const activitiesPayload = selected.map((name) => {
-        const def = activityOptions.find((a) => a.name === name);
-        return { activity_name: name, fee: def?.fee || 0 };
+        return { activity_name: name, fee: getActivityFee(shift, plan, name) };
       });
 
       // ── Upload files if provided ──────────────────────────────────────────
@@ -439,6 +483,8 @@ function EnrollPage() {
         marksheetUrl = await uploadFile(marksheetFile, "enrollments", `${folder}/marksheet.${ext}`);
       }
       // ─────────────────────────────────────────────────────────────────────
+
+      const savedRemarks = buildSavedRemarks(remarks, plan, planPeriod);
 
       if (isEditMode) {
         const { error } = await supabase
@@ -461,7 +507,7 @@ function EnrollPage() {
             city: cityChoice === "Other" ? otherCity.trim() : "Indore",
             activities: activitiesPayload,
             mess_opted: shift === "MORNING" && messOpted,
-            mess_fee: shift === "MORNING" && messOpted ? MESS_FEE : 0,
+            mess_fee: shift === "MORNING" && messOpted ? getMessFee(plan) : 0,
             transport_opted: shift === "MORNING" && transportOpted,
             transport_address: shift === "MORNING" && transportOpted ? transportAddress : null,
             transport_fee:
@@ -474,7 +520,7 @@ function EnrollPage() {
             payment_mode: paymentMode as "CASH" | "ONLINE",
             transaction_id: paymentMode === "ONLINE" ? transactionId.trim() : null,
             allergies_medications: allergies || null,
-            remarks: remarks || null,
+            remarks: savedRemarks,
             photo_url: photoUrl,
             marksheet_url: marksheetUrl,
             last_edited_at: new Date().toISOString(),
@@ -538,7 +584,7 @@ function EnrollPage() {
           city: cityChoice === "Other" ? otherCity.trim() : "Indore",
           activities: activitiesPayload,
           mess_opted: shift === "MORNING" && messOpted,
-          mess_fee: shift === "MORNING" && messOpted ? MESS_FEE : 0,
+          mess_fee: shift === "MORNING" && messOpted ? getMessFee(plan) : 0,
           transport_opted: shift === "MORNING" && transportOpted,
           transport_address: shift === "MORNING" && transportOpted ? transportAddress : null,
           transport_fee:
@@ -551,7 +597,7 @@ function EnrollPage() {
           payment_mode: paymentMode as "CASH" | "ONLINE",
           transaction_id: paymentMode === "ONLINE" ? transactionId.trim() : null,
           allergies_medications: allergies || null,
-          remarks: remarks || null,
+          remarks: savedRemarks,
           enrolled_by: session.user.id,
           // ── new fields ──
           photo_url: photoUrl,
@@ -581,14 +627,49 @@ function EnrollPage() {
           <Card>
             <CardContent className="p-4">
               <Label className="mb-2 block">Shift</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <ShiftButton active={shift === "MORNING"} onClick={() => setShift("MORNING")}>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <ShiftButton
+                  active={shift === "MORNING" && plan === "FULL"}
+                  onClick={() => chooseShift("MORNING", "FULL")}
+                >
                   Morning (7 AM – 12 Noon)
                 </ShiftButton>
-                <ShiftButton active={shift === "EVENING"} onClick={() => setShift("EVENING")}>
+                <ShiftButton
+                  active={shift === "EVENING" && plan === "FULL"}
+                  onClick={() => chooseShift("EVENING", "FULL")}
+                >
                   Evening (5 PM – 7 PM)
                 </ShiftButton>
+                <ShiftButton
+                  active={shift === "MORNING" && plan === "15_DAYS"}
+                  onClick={() => chooseShift("MORNING", "15_DAYS")}
+                >
+                  Morning (7 AM - 12 Noon) 15 days
+                </ShiftButton>
+                <ShiftButton
+                  active={shift === "EVENING" && plan === "15_DAYS"}
+                  onClick={() => chooseShift("EVENING", "15_DAYS")}
+                >
+                  Evening (5 PM - 7 PM) 15 days
+                </ShiftButton>
               </div>
+              {plan === "15_DAYS" && (
+                <div className="mt-4">
+                  <Label className="mb-2 block">15 days date range *</Label>
+                  <RadioGroup
+                    value={planPeriod}
+                    onValueChange={(value) => setPlanPeriod(value as CampPlanPeriod)}
+                    className="flex flex-wrap gap-6"
+                  >
+                    <Radio v="02 May to 15 May" current={planPeriod}>
+                      02 May to 15 May
+                    </Radio>
+                    <Radio v="16 May to 30 May" current={planPeriod}>
+                      16 May to 30 May
+                    </Radio>
+                  </RadioGroup>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -765,7 +846,7 @@ function EnrollPage() {
                         value={a.name}
                         disabled={isOptionDisabled(a.name, i)}
                       >
-                        {a.name} — {fmtINR(a.fee)}
+                        {a.name} - {fmtINR(getActivityFee(shift, plan, a.name))}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -801,7 +882,7 @@ function EnrollPage() {
                     }}
                   />
                   <span className="text-sm">
-                    <b>Mess Facility — {fmtINR(MESS_FEE)}</b>
+                    <b>Mess Facility - {fmtINR(getMessFee(plan))}</b>
                     <br />
                     <span className="text-muted-foreground text-xs">
                       Includes one meal slot. Reduces available activity slots by 1.
@@ -928,6 +1009,7 @@ function EnrollPage() {
               <div className="text-sm font-semibold mb-2">{CAMP_NAME} — Fee</div>
               <div className="text-xs text-muted-foreground mb-3">
                 {shift === "MORNING" ? "Morning shift" : "Evening shift"}
+                {plan === "15_DAYS" ? ` - 15 days${planPeriod ? ` (${planPeriod})` : ""}` : ""}
               </div>
               {fee.lines.length === 0 && (
                 <div className="text-sm text-muted-foreground">No selections yet.</div>

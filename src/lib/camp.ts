@@ -1,4 +1,4 @@
-// Camp constants — single source of truth for activities and fees
+// Camp constants - single source of truth for activities and fees
 export const CAMP_NAME = "Summer Camp 2026";
 export const ORG_NAME = "Summer Camp 2026";
 
@@ -12,12 +12,28 @@ export const MORNING_ACTIVITIES = [
   { name: "Dance", fee: 800, premium: false },
 ] as const;
 
+export const MORNING_ACTIVITIES_15_DAYS = [
+  { name: "Swimming", fee: 1200, premium: true },
+  { name: "Horse Riding", fee: 1500, premium: true },
+  { name: "Skating", fee: 500, premium: false },
+  { name: "Music", fee: 500, premium: false },
+  { name: "AI", fee: 500, premium: false },
+  { name: "Spoken English", fee: 500, premium: false },
+  { name: "Dance", fee: 500, premium: false },
+] as const;
+
 export const EVENING_ACTIVITIES = [
   { name: "Horse Riding", fee: 1800 },
   { name: "Swimming", fee: 1500 },
 ] as const;
 
+export const EVENING_ACTIVITIES_15_DAYS = [
+  { name: "Horse Riding", fee: 1300 },
+  { name: "Swimming", fee: 900 },
+] as const;
+
 export const MESS_FEE = 1100;
+export const MESS_FEE_15_DAYS = 700;
 export const COMBO_TOTAL = 3500;
 export const COMBO_DISCOUNT = 400;
 
@@ -28,6 +44,8 @@ export const CLASSES = [
 ];
 
 export type Shift = "MORNING" | "EVENING";
+export type CampPlan = "FULL" | "15_DAYS";
+export type CampPlanPeriod = "02 May to 15 May" | "16 May to 30 May";
 
 export interface SelectedActivity {
   activity_name: string;
@@ -41,67 +59,78 @@ export interface FeeBreakdown {
   total: number;
 }
 
+export function getActivityFee(shift: Shift, plan: CampPlan, name: string): number {
+  const activities =
+    shift === "MORNING"
+      ? plan === "15_DAYS"
+        ? MORNING_ACTIVITIES_15_DAYS
+        : MORNING_ACTIVITIES
+      : plan === "15_DAYS"
+        ? EVENING_ACTIVITIES_15_DAYS
+        : EVENING_ACTIVITIES;
+  return activities.find((activity) => activity.name === name)?.fee || 0;
+}
+
+export function getMessFee(plan: CampPlan): number {
+  return plan === "15_DAYS" ? MESS_FEE_15_DAYS : MESS_FEE;
+}
+
 export function computeFee(args: {
   shift: Shift;
-  activities: string[];   // selected activity names (filtered, no empties)
+  plan?: CampPlan;
+  activities: string[];
   messOpted: boolean;
   transportOpted: boolean;
   transportFee: number;
 }): FeeBreakdown {
-  const { shift, activities, messOpted, transportOpted, transportFee } = args;
+  const { shift, plan = "FULL", activities, messOpted, transportOpted, transportFee } = args;
   const lines: FeeBreakdown["lines"] = [];
+  const morningActivities = plan === "15_DAYS" ? MORNING_ACTIVITIES_15_DAYS : MORNING_ACTIVITIES;
+  const eveningActivities = plan === "15_DAYS" ? EVENING_ACTIVITIES_15_DAYS : EVENING_ACTIVITIES;
+  const messFee = getMessFee(plan);
+  const planLabel = plan === "15_DAYS" ? " 15 days" : "";
 
   if (shift === "EVENING") {
     let total = 0;
     activities.forEach((name) => {
-      const def = EVENING_ACTIVITIES.find((a) => a.name === name);
+      const def = eveningActivities.find((a) => a.name === name);
       if (!def) return;
-      lines.push({ label: `${name} — Evening`, amount: def.fee });
+      lines.push({ label: `${name} - Evening${planLabel}`, amount: def.fee });
       total += def.fee;
     });
     return { lines, combo_applied: false, combo_discount: 0, total };
   }
 
-  // MORNING
   const defs = activities
-    .map((n) => MORNING_ACTIVITIES.find((a) => a.name === n))
-    .filter((a): a is typeof MORNING_ACTIVITIES[number] => !!a);
+    .map((name) => morningActivities.find((activity) => activity.name === name))
+    .filter((activity): activity is typeof morningActivities[number] => !!activity);
 
-  const premiums = defs.filter((a) => a.premium);
-  const standards = defs.filter((a) => !a.premium);
-
+  const premiums = defs.filter((activity) => activity.premium);
+  const standards = defs.filter((activity) => !activity.premium);
   const comboEligible = premiums.length >= 1 && standards.length >= 1 && messOpted;
-  const covered = new Set<string>();
   let total = 0;
 
   if (comboEligible) {
-    const p = premiums[0];
-    const s = standards[0];
-    covered.add(p.name + ":P");
-    covered.add(s.name + ":S");
-    lines.push({ label: `${p.name} — Morning`, amount: p.fee });
-    lines.push({ label: `${s.name} — Morning`, amount: s.fee });
-    lines.push({ label: "Mess Facility", amount: MESS_FEE });
+    const premium = premiums[0];
+    const standard = standards[0];
+    lines.push({ label: `${premium.name} - Morning${planLabel}`, amount: premium.fee });
+    lines.push({ label: `${standard.name} - Morning${planLabel}`, amount: standard.fee });
+    lines.push({ label: `Mess Facility${planLabel}`, amount: messFee });
     lines.push({ label: "Combo Discount", amount: -COMBO_DISCOUNT, isDiscount: true });
-    total = COMBO_TOTAL;
+    total = premium.fee + standard.fee + messFee - COMBO_DISCOUNT;
 
-    // remaining activities
-    const rest = [
-      ...premiums.slice(1),
-      ...standards.slice(1),
-    ];
-    rest.forEach((a) => {
-      lines.push({ label: `${a.name} — Morning`, amount: a.fee });
-      total += a.fee;
+    [...premiums.slice(1), ...standards.slice(1)].forEach((activity) => {
+      lines.push({ label: `${activity.name} - Morning${planLabel}`, amount: activity.fee });
+      total += activity.fee;
     });
   } else {
-    defs.forEach((a) => {
-      lines.push({ label: `${a.name} — Morning`, amount: a.fee });
-      total += a.fee;
+    defs.forEach((activity) => {
+      lines.push({ label: `${activity.name} - Morning${planLabel}`, amount: activity.fee });
+      total += activity.fee;
     });
     if (messOpted) {
-      lines.push({ label: "Mess Facility", amount: MESS_FEE });
-      total += MESS_FEE;
+      lines.push({ label: `Mess Facility${planLabel}`, amount: messFee });
+      total += messFee;
     }
   }
 
@@ -138,7 +167,7 @@ export function calcAge(dob: string): number {
 
 export function buildRegistrationId(args: {
   firstName: string;
-  adminFormCount: number; // count INCLUDING this submission
+  adminFormCount: number;
   globalCount: number;
 }): string {
   const raw = (args.firstName || "")
