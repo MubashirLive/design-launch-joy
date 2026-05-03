@@ -44,6 +44,7 @@ export const CLASSES = [
 ];
 
 export type Shift = "MORNING" | "EVENING";
+export type EnrollmentShift = Shift | "MORNING 15 DAYS" | "EVENING 15 DAYS";
 export type CampPlan = "FULL" | "15_DAYS";
 export type CampPlanPeriod = "02 May to 15 May" | "16 May to 30 May";
 
@@ -73,6 +74,29 @@ export function getActivityFee(shift: Shift, plan: CampPlan, name: string): numb
 
 export function getMessFee(plan: CampPlan): number {
   return plan === "15_DAYS" ? MESS_FEE_15_DAYS : MESS_FEE;
+}
+
+export function toEnrollmentShift(shift: Shift, plan: CampPlan): EnrollmentShift {
+  if (plan === "15_DAYS") return shift === "MORNING" ? "MORNING 15 DAYS" : "EVENING 15 DAYS";
+  return shift;
+}
+
+export function baseShift(shift: EnrollmentShift): Shift {
+  return shift.startsWith("MORNING") ? "MORNING" : "EVENING";
+}
+
+export function planFromShift(shift: EnrollmentShift): CampPlan {
+  return shift.endsWith("15 DAYS") ? "15_DAYS" : "FULL";
+}
+
+export function isMorningShift(shift: EnrollmentShift) {
+  return baseShift(shift) === "MORNING";
+}
+
+export function shiftDisplayName(shift: EnrollmentShift) {
+  if (shift === "MORNING 15 DAYS") return "Morning 15 days";
+  if (shift === "EVENING 15 DAYS") return "Evening 15 days";
+  return shift === "MORNING" ? "Morning" : "Evening";
 }
 
 export function computeFee(args: {
@@ -107,7 +131,7 @@ export function computeFee(args: {
 
   const premiums = defs.filter((activity) => activity.premium);
   const standards = defs.filter((activity) => !activity.premium);
-  const comboEligible = premiums.length >= 1 && standards.length >= 1 && messOpted;
+  const comboEligible = plan !== "15_DAYS" && premiums.length >= 1 && standards.length >= 1 && messOpted;
   let total = 0;
 
   if (comboEligible) {

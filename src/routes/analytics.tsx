@@ -5,7 +5,13 @@ import { AppShell } from "@/components/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtINR, MORNING_ACTIVITIES, EVENING_ACTIVITIES } from "@/lib/camp";
+import {
+  fmtINR,
+  MORNING_ACTIVITIES,
+  EVENING_ACTIVITIES,
+  isMorningShift,
+  type EnrollmentShift,
+} from "@/lib/camp";
 import { Download, TrendingUp, Users, Wallet, FileText } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -21,7 +27,7 @@ interface Enrollment {
   receipt_number: string | null;
   registration_id: string | null;
   student_name: string;
-  shift: "MORNING" | "EVENING";
+  shift: EnrollmentShift;
   class: string;
   school_name: string;
   city: string;
@@ -89,7 +95,7 @@ function AnalyticsPage() {
     const revenue = filtered.reduce((s, r) => s + (r.total_amount || 0), 0);
     const cash = filtered.filter((r) => r.payment_mode === "CASH").reduce((s, r) => s + r.total_amount, 0);
     const online = revenue - cash;
-    const morning = filtered.filter((r) => r.shift === "MORNING").length;
+    const morning = filtered.filter((r) => isMorningShift(r.shift)).length;
     const evening = total - morning;
     const mess = filtered.filter((r) => r.mess_opted).length;
     const transport = filtered.filter((r) => r.transport_opted).length;
@@ -113,7 +119,7 @@ function AnalyticsPage() {
     const map = new Map<string, number>();
     filtered.forEach((r) => {
       (r.activities || []).forEach((a) => {
-        const key = `${a.activity_name} (${r.shift === "MORNING" ? "M" : "E"})`;
+        const key = `${a.activity_name} (${isMorningShift(r.shift) ? "M" : "E"})`;
         map.set(key, (map.get(key) || 0) + 1);
       });
     });
@@ -151,8 +157,8 @@ function AnalyticsPage() {
   const slotUtil = useMemo(() => {
     const morningSlots = MORNING_ACTIVITIES.length;
     const eveningSlots = EVENING_ACTIVITIES.length;
-    const usedMorning = filtered.filter((r) => r.shift === "MORNING").reduce((s, r) => s + (r.activities?.length || 0), 0);
-    const usedEvening = filtered.filter((r) => r.shift === "EVENING").reduce((s, r) => s + (r.activities?.length || 0), 0);
+    const usedMorning = filtered.filter((r) => isMorningShift(r.shift)).reduce((s, r) => s + (r.activities?.length || 0), 0);
+    const usedEvening = filtered.filter((r) => !isMorningShift(r.shift)).reduce((s, r) => s + (r.activities?.length || 0), 0);
     return { morningSlots, eveningSlots, usedMorning, usedEvening };
   }, [filtered]);
 

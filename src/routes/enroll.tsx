@@ -26,11 +26,15 @@ import {
   fmtINR,
   getActivityFee,
   getMessFee,
+  baseShift,
+  planFromShift,
   slotBudget,
   buildRegistrationId,
   buildReceiptNumber,
+  toEnrollmentShift,
   type CampPlan,
   type CampPlanPeriod,
+  type EnrollmentShift,
   type Shift,
 } from "@/lib/camp";
 import { supabase } from "@/integrations/supabase/client";
@@ -351,7 +355,9 @@ function EnrollPage() {
           return;
         }
 
-        const existingShift = data.shift as Shift;
+        const existingEnrollmentShift = data.shift as EnrollmentShift;
+        const existingShift = baseShift(existingEnrollmentShift);
+        const existingPlan = planFromShift(existingEnrollmentShift);
         skipNextShiftReset.current = true;
         setShift(existingShift);
         setStudentName(data.student_name || "");
@@ -376,12 +382,12 @@ function EnrollPage() {
 
         const existingActivities = Array.isArray(data.activities)
           ? data.activities
-              .map((a) =>
-                typeof a === "object" && a && "activity_name" in a
-                  ? String(a.activity_name || "")
-                  : "",
-              )
-              .filter(Boolean)
+            .map((a) =>
+              typeof a === "object" && a && "activity_name" in a
+                ? String(a.activity_name || "")
+                : "",
+            )
+            .filter(Boolean)
           : [];
         setAct(existingActivities.length ? existingActivities : [""]);
         setMessOpted(!!data.mess_opted);
@@ -392,12 +398,12 @@ function EnrollPage() {
         setPaymentMode(data.payment_mode || "");
         setTransactionId(data.transaction_id || "");
         const parsedRemarks = parsePlanFromRemarks(data.remarks);
-        setPlan(parsedRemarks.plan);
+        setPlan(existingPlan);
         setPlanPeriod(parsedRemarks.period);
         setRemarks(parsedRemarks.remarks);
         const existingFee = computeFee({
           shift: existingShift,
-          plan: parsedRemarks.plan,
+          plan: existingPlan,
           activities: existingActivities,
           messOpted: existingShift === "MORNING" && !!data.mess_opted,
           transportOpted: existingShift === "MORNING" && !!data.transport_opted,
@@ -470,6 +476,7 @@ function EnrollPage() {
       //   Storage → New bucket → name: "enrollments" → Public: true
       let photoUrl: string | null = existingPhotoUrl;
       let marksheetUrl: string | null = existingMarksheetUrl;
+      const preferred15Days = plan === "15_DAYS" ? planPeriod || null : null;
 
       const folder = `${session.user.id}/${Date.now()}`;
 
@@ -485,12 +492,13 @@ function EnrollPage() {
       // ─────────────────────────────────────────────────────────────────────
 
       const savedRemarks = buildSavedRemarks(remarks, plan, planPeriod);
+      const savedShift = toEnrollmentShift(shift, plan);
 
       if (isEditMode) {
         const { error } = await supabase
           .from("enrollments")
           .update({
-            shift,
+            shift: savedShift,
             student_name: studentName.trim(),
             date_of_birth: dob,
             age,
@@ -524,6 +532,7 @@ function EnrollPage() {
             photo_url: photoUrl,
             marksheet_url: marksheetUrl,
             last_edited_at: new Date().toISOString(),
+            preferred_15_days: preferred15Days
           })
           .eq("id", edit);
 
@@ -567,7 +576,7 @@ function EnrollPage() {
           registration_number: regNum as number,
           registration_id: regId,
           is_draft: false,
-          shift,
+          shift: savedShift,
           student_name: studentName.trim(),
           date_of_birth: dob,
           age,
@@ -602,6 +611,7 @@ function EnrollPage() {
           // ── new fields ──
           photo_url: photoUrl,
           marksheet_url: marksheetUrl,
+          preferred_15_days: preferred15Days
         })
         .select("id")
         .single();
@@ -1095,11 +1105,10 @@ function ShiftButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-md border-2 px-4 py-3 text-sm font-medium transition-colors ${
-        active
+      className={`rounded-md border-2 px-4 py-3 text-sm font-medium transition-colors ${active
           ? "border-primary bg-primary text-primary-foreground"
           : "border-border bg-card hover:border-primary/50"
-      }`}
+        }`}
     >
       {children}
     </button>

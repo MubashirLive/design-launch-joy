@@ -15,7 +15,15 @@ import {
 } from "@/components/ui/select";
 import { Download, ExternalLink, FilePlus2, Filter, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { CLASSES, EVENING_ACTIVITIES, MORNING_ACTIVITIES, fmtINR } from "@/lib/camp";
+import {
+  CLASSES,
+  EVENING_ACTIVITIES,
+  MORNING_ACTIVITIES,
+  fmtINR,
+  isMorningShift,
+  shiftDisplayName,
+  type EnrollmentShift,
+} from "@/lib/camp";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard")({
@@ -36,7 +44,7 @@ interface Enrollment {
   age: number;
   gender: string;
   class: string;
-  shift: "MORNING" | "EVENING";
+  shift: EnrollmentShift;
   payment_mode: "CASH" | "ONLINE";
   transaction_id: string | null;
   total_amount: number;
@@ -115,7 +123,7 @@ function AdminHome() {
 
   const [filterAdmin, setFilterAdmin] = useState("all");
   const [filterPayment, setFilterPayment] = useState<"all" | "CASH" | "ONLINE">("all");
-  const [filterShift, setFilterShift] = useState<"all" | "MORNING" | "EVENING">("all");
+  const [filterShift, setFilterShift] = useState<"all" | EnrollmentShift>("all");
   const [filterGender, setFilterGender] = useState("all");
   const [filterAge, setFilterAge] = useState("all");
   const [filterActivity, setFilterActivity] = useState("all");
@@ -418,6 +426,8 @@ function AdminHome() {
                 <SelectItem value="all">All Shifts</SelectItem>
                 <SelectItem value="MORNING">Morning</SelectItem>
                 <SelectItem value="EVENING">Evening</SelectItem>
+                <SelectItem value="MORNING 15 DAYS">Morning 15 days</SelectItem>
+                <SelectItem value="EVENING 15 DAYS">Evening 15 days</SelectItem>
               </SelectContent>
             </Select>
 
@@ -627,9 +637,9 @@ function AdminHome() {
                         <td className="px-2 py-2.5">
                           <Badge
                             variant="outline"
-                            className={`text-[11px] ${e.shift === "MORNING" ? "border-amber-400 text-amber-700 bg-amber-50" : "border-indigo-400 text-indigo-700 bg-indigo-50"}`}
+                            className={`text-[11px] ${isMorningShift(e.shift) ? "border-amber-400 text-amber-700 bg-amber-50" : "border-indigo-400 text-indigo-700 bg-indigo-50"}`}
                           >
-                            {e.shift === "MORNING" ? "Morning" : "Evening"}
+                            {shiftDisplayName(e.shift)}
                           </Badge>
                         </td>
                         <td className="px-2 py-2.5">

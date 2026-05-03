@@ -224,7 +224,7 @@ export type Database = {
     Enums: {
       app_role: "super_admin" | "admin";
       payment_mode: "CASH" | "ONLINE";
-      shift_type: "MORNING" | "EVENING";
+      shift_type: "MORNING" | "EVENING" | "MORNING 15 DAYS" | "EVENING 15 DAYS";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -352,7 +352,7 @@ export const Constants = {
     Enums: {
       app_role: ["super_admin", "admin"],
       payment_mode: ["CASH", "ONLINE"],
-      shift_type: ["MORNING", "EVENING"],
+      shift_type: ["MORNING", "EVENING", "MORNING 15 DAYS", "EVENING 15 DAYS"],
     },
   },
 } as const;

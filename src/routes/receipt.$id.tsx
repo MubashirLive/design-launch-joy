@@ -4,7 +4,13 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Loader2, MessageCircle, Printer, Trash2 } from "lucide-react";
-import { COMBO_DISCOUNT, ORG_NAME, fmtINR } from "@/lib/camp";
+import {
+  COMBO_DISCOUNT,
+  ORG_NAME,
+  baseShift,
+  fmtINR,
+  type EnrollmentShift,
+} from "@/lib/camp";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -28,7 +34,7 @@ interface Enrollment {
   receipt_number: string;
   registration_number: number;
   registration_id: string;
-  shift: "MORNING" | "EVENING";
+  shift: EnrollmentShift;
   student_name: string;
   date_of_birth: string;
   age: number;
@@ -72,7 +78,7 @@ function buildReceiptFileName(
   const serial = String(data.registration_number).padStart(3, "0");
   const student = fileNamePart(data.student_name) || "Student";
   const father = fileNamePart(data.father_name) || "Father";
-  const shift = data.shift === "MORNING" ? "Morning" : "Evening";
+  const shift = baseShift(data.shift) === "MORNING" ? "Morning" : "Evening";
   return `${serial}${student}_${father}_${shift}`;
 }
 
@@ -138,7 +144,9 @@ function ReceiptPage() {
   const dobStr = `${String(dobD.getDate()).padStart(2, "0")}/${String(dobD.getMonth() + 1).padStart(2, "0")}/${dobD.getFullYear()}`;
   const planPeriod = parsePlanPeriod(data.remarks);
   const shiftLabelBase =
-    data.shift === "MORNING" ? "Morning (7:00 AM – 12:00 Noon)" : "Evening (5:00 PM – 7:00 PM)";
+    baseShift(data.shift) === "MORNING"
+      ? "Morning (7:00 AM – 12:00 Noon)"
+      : "Evening (5:00 PM – 7:00 PM)";
   const shiftLabel = planPeriod ? `${shiftLabelBase} (${planPeriod})` : shiftLabelBase;
 
   const homeTo = role === "super_admin" ? "/super" : "/dashboard";
@@ -305,7 +313,7 @@ function ReceiptPage() {
                     <tr key={`a${n}`} className="border-t">
                       <td className="p-1.5">{n}</td>
                       <td className="p-1.5">
-                        {a.activity_name} — {data.shift === "MORNING" ? "Morning" : "Evening"}
+                        {a.activity_name} — {baseShift(data.shift) === "MORNING" ? "Morning" : "Evening"}
                       </td>
                       <td className="p-1.5 text-right">{a.fee.toLocaleString("en-IN")}</td>
                     </tr>,
